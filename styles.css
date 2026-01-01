@@ -1,0 +1,501 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.header-actions {
+    text-align: right;
+    margin-bottom: 20px;
+}
+
+.edit-btn, .save-btn, .cancel-btn, .reset-btn {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 10px;
+}
+
+.reset-btn {
+    background-color: #ffc107;
+    color: #333;
+}
+
+.reset-btn:hover {
+    background-color: #e0a800;
+}
+
+.edit-btn:hover, .save-btn:hover {
+    background-color: #0056b3;
+}
+
+.cancel-btn {
+    background-color: #6c757d;
+}
+
+.cancel-btn:hover {
+    background-color: #545b62;
+}
+
+.profile-section {
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.profile-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 30px;
+}
+
+.profile-image-container {
+    flex-shrink: 0;
+}
+
+.profile-image {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #e0e0e0;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-info h1 {
+    font-size: 32px;
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+
+.profile-info p {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+.contact-info {
+    display: none;
+}
+
+.contact-info.show {
+    display: block;
+}
+
+.profile-links {
+    margin-top: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.profile-links a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 15px;
+}
+
+.profile-links a:hover {
+    text-decoration: underline;
+}
+
+.profile-links a i {
+    font-size: 16px;
+}
+
+.section {
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.section.hidden {
+    display: none;
+}
+
+.section h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #2c3e50;
+    border-left: 4px solid #007bff;
+    padding-left: 10px;
+}
+
+.content {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #444;
+    white-space: pre-line;
+}
+
+/* SKILL 스타일 */
+.skill-category {
+    margin-bottom: 25px;
+}
+
+.skill-category h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #555;
+}
+
+.skill-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.skill-item {
+    display: inline-block;
+    padding: 5px 12px;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #333;
+}
+
+/* EXPERIENCE 스타일 */
+.experience-item {
+    margin-bottom: 30px;
+    padding-left: 20px;
+    border-left: 3px solid #e0e0e0;
+}
+
+.experience-header {
+    margin-bottom: 10px;
+}
+
+.experience-period {
+    font-size: 14px;
+    color: #666;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.experience-company {
+    font-size: 20px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.experience-duration {
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+.experience-role {
+    font-size: 16px;
+    color: #555;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.experience-description {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.7;
+}
+
+.experience-description ul {
+    margin-left: 20px;
+    margin-top: 10px;
+}
+
+.experience-description li {
+    margin-bottom: 8px;
+}
+
+.experience-skills {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.experience-skills strong {
+    font-size: 13px;
+    color: #555;
+}
+
+.experience-skills .skill-items {
+    margin-top: 8px;
+}
+
+/* PROJECT 스타일 */
+.project-item {
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+}
+
+.project-header {
+    margin-bottom: 10px;
+}
+
+.project-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.project-period {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 10px;
+}
+
+.project-description {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.7;
+    margin-bottom: 10px;
+}
+
+.project-skills {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.project-skills strong {
+    font-size: 13px;
+    color: #555;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.project-skills .skill-items {
+    margin-top: 8px;
+}
+
+.project-links {
+    margin-top: 10px;
+}
+
+.project-links a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 13px;
+    margin-right: 15px;
+}
+
+.project-links a:hover {
+    text-decoration: underline;
+}
+
+/* OPEN SOURCE 스타일 */
+.opensource-item {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+}
+
+.opensource-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.opensource-description {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.7;
+    margin-bottom: 10px;
+}
+
+.opensource-links {
+    margin-top: 10px;
+}
+
+.opensource-links a {
+    color: #007bff;
+    text-decoration: none;
+    font-size: 13px;
+    margin-right: 15px;
+}
+
+.opensource-links a:hover {
+    text-decoration: underline;
+}
+
+/* EDUCATION 스타일 */
+.education-item {
+    margin-bottom: 25px;
+    padding-left: 20px;
+    border-left: 3px solid #e0e0e0;
+}
+
+.education-period {
+    font-size: 14px;
+    color: #666;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.education-school {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.education-major {
+    font-size: 14px;
+    color: #555;
+    font-style: italic;
+}
+
+/* ETC 스타일 */
+.etc-item {
+    margin-bottom: 20px;
+    padding-left: 20px;
+    border-left: 3px solid #e0e0e0;
+}
+
+.etc-period {
+    font-size: 14px;
+    color: #666;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.etc-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.etc-role {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+.etc-description {
+    font-size: 14px;
+    color: #666;
+    line-height: 1.7;
+}
+
+/* ARTICLE 스타일 */
+.article-list {
+    list-style: none;
+}
+
+.article-item {
+    margin-bottom: 10px;
+    padding-left: 15px;
+    position: relative;
+}
+
+.article-item::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #007bff;
+    font-weight: bold;
+}
+
+.article-item a {
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.article-item a:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+/* 최상단 이동 버튼 */
+.scroll-to-top-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.scroll-to-top-btn:hover {
+    background-color: #0056b3;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* 프로젝트 고객사 스타일 */
+.project-client {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .profile-header {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .profile-image {
+        width: 120px;
+        height: 120px;
+    }
+
+    .container {
+        padding: 15px;
+    }
+    
+    .scroll-to-top-btn {
+        bottom: 20px;
+        right: 20px;
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+    }
+}
+
