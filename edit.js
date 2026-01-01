@@ -86,8 +86,10 @@ function renderSkillEdit() {
                 <button type="button" class="delete-btn" onclick="deleteSkillCategory(${index})">삭제</button>
             </div>
             <div class="form-group">
-                <label>활성화:</label>
-                <input type="checkbox" class="skill-enabled" ${skill.enabled !== false ? 'checked' : ''} data-index="${index}">
+                <label>
+                    <input type="checkbox" class="skill-enabled" ${skill.enabled !== false ? 'checked' : ''} data-index="${index}">
+                    활성화
+                </label>
             </div>
             <div class="skill-items-edit" id="skillItems${index}">
                 ${skill.items.map((item, itemIndex) => `
@@ -106,8 +108,70 @@ function renderSkillEdit() {
     });
 }
 
+// EXPERIENCE 입력 필드 값 저장
+function saveExperienceInputs() {
+    document.querySelectorAll('.experience-start-date').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.experiences[index]) {
+            editData.experiences[index].startDate = input.value;
+        }
+    });
+    document.querySelectorAll('.experience-end-date').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.experiences[index]) {
+            editData.experiences[index].endDate = input.value;
+        }
+    });
+    document.querySelectorAll('.experience-is-current').forEach(checkbox => {
+        const index = parseInt(checkbox.dataset.index);
+        if (editData.experiences[index]) {
+            editData.experiences[index].isCurrent = checkbox.checked;
+        }
+    });
+    document.querySelectorAll('.experience-employment-type').forEach(select => {
+        const index = parseInt(select.dataset.index);
+        if (editData.experiences[index]) {
+            editData.experiences[index].employmentType = select.value;
+        }
+    });
+    document.querySelectorAll('.experience-company').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.experiences[index]) {
+            editData.experiences[index].company = input.value;
+        }
+    });
+    document.querySelectorAll('.experience-role').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.experiences[index]) {
+            editData.experiences[index].role = input.value;
+        }
+    });
+    document.querySelectorAll('.experience-description').forEach(textarea => {
+        const index = parseInt(textarea.dataset.index);
+        if (editData.experiences[index]) {
+            editData.experiences[index].description = textarea.value;
+        }
+    });
+    document.querySelectorAll('.experience-skills').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.experiences[index]) {
+            const skillsStr = input.value;
+            editData.experiences[index].skills = skillsStr ? skillsStr.split(',').map(s => s.trim()).filter(s => s) : [];
+        }
+    });
+    document.querySelectorAll('.item-enabled[data-type="experience"]').forEach(checkbox => {
+        const index = parseInt(checkbox.dataset.index);
+        if (editData.experiences[index]) {
+            editData.experiences[index].enabled = checkbox.checked;
+        }
+    });
+}
+
 // EXPERIENCE 편집 렌더링
-function renderExperienceEdit() {
+function renderExperienceEdit(skipSave) {
+    if (!skipSave) {
+        saveExperienceInputs(); // 렌더링 전에 현재 입력 값 저장
+    }
     const container = document.getElementById('experienceEditContainer');
     container.innerHTML = '';
     
@@ -135,8 +199,10 @@ function createExperienceEditItem(exp, index) {
             </div>
         </div>
         <div class="form-group">
-            <label>활성화:</label>
-            <input type="checkbox" class="item-enabled" ${exp.enabled !== false ? 'checked' : ''} data-index="${index}" data-type="experience">
+            <label>
+                <input type="checkbox" class="item-enabled" ${exp.enabled !== false ? 'checked' : ''} data-index="${index}" data-type="experience">
+                활성화
+            </label>
         </div>
         <div class="form-group">
             <label>입사일:</label>
@@ -185,8 +251,67 @@ function createExperienceEditItem(exp, index) {
     return div;
 }
 
+// PROJECT 입력 필드 값 저장
+function saveProjectInputs() {
+    document.querySelectorAll('.project-name').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.projects[index]) {
+            editData.projects[index].name = input.value;
+        }
+    });
+    document.querySelectorAll('.project-client').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.projects[index]) {
+            editData.projects[index].client = input.value;
+        }
+    });
+    document.querySelectorAll('.project-period').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.projects[index]) {
+            editData.projects[index].period = input.value;
+        }
+    });
+    document.querySelectorAll('.project-description').forEach(textarea => {
+        const index = parseInt(textarea.dataset.index);
+        if (editData.projects[index]) {
+            editData.projects[index].description = textarea.value;
+        }
+    });
+    document.querySelectorAll('.project-skills').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.projects[index]) {
+            const skillsStr = input.value;
+            editData.projects[index].skills = skillsStr ? skillsStr.split(',').map(s => s.trim()).filter(s => s) : [];
+        }
+    });
+    document.querySelectorAll('.item-enabled[data-type="project"]').forEach(checkbox => {
+        const index = parseInt(checkbox.dataset.index);
+        if (editData.projects[index]) {
+            editData.projects[index].enabled = checkbox.checked;
+        }
+    });
+    // 링크 저장
+    document.querySelectorAll('.project-links-edit .link-item').forEach(linkItem => {
+        const projectIndex = parseInt(linkItem.querySelector('.link-label')?.dataset.index);
+        const linkIndex = parseInt(linkItem.querySelector('.link-label')?.dataset.linkIndex);
+        if (projectIndex !== undefined && linkIndex !== undefined && editData.projects[projectIndex]) {
+            const label = linkItem.querySelector('.link-label')?.value || '';
+            const url = linkItem.querySelector('.link-url')?.value || '';
+            if (!editData.projects[projectIndex].links) {
+                editData.projects[projectIndex].links = [];
+            }
+            if (editData.projects[projectIndex].links[linkIndex]) {
+                editData.projects[projectIndex].links[linkIndex] = { label, url };
+            }
+        }
+    });
+}
+
 // PROJECT 편집 렌더링
-function renderProjectEdit() {
+function renderProjectEdit(skipSave) {
+    if (!skipSave) {
+        saveProjectInputs(); // 렌더링 전에 현재 입력 값 저장
+    }
     const container = document.getElementById('projectEditContainer');
     container.innerHTML = '';
     
@@ -210,8 +335,10 @@ function createProjectEditItem(proj, index) {
             </div>
         </div>
         <div class="form-group">
-            <label>활성화:</label>
-            <input type="checkbox" class="item-enabled" ${proj.enabled !== false ? 'checked' : ''} data-index="${index}" data-type="project">
+            <label>
+                <input type="checkbox" class="item-enabled" ${proj.enabled !== false ? 'checked' : ''} data-index="${index}" data-type="project">
+                활성화
+            </label>
         </div>
         <div class="form-group">
             <label>프로젝트명:</label>
@@ -250,8 +377,48 @@ function createProjectEditItem(proj, index) {
     return div;
 }
 
+// OPEN SOURCE 입력 필드 값 저장
+function saveOpensourceInputs() {
+    document.querySelectorAll('.opensource-name').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.opensources[index]) {
+            editData.opensources[index].name = input.value;
+        }
+    });
+    document.querySelectorAll('.opensource-description').forEach(textarea => {
+        const index = parseInt(textarea.dataset.index);
+        if (editData.opensources[index]) {
+            editData.opensources[index].description = textarea.value;
+        }
+    });
+    document.querySelectorAll('.item-enabled[data-type="opensource"]').forEach(checkbox => {
+        const index = parseInt(checkbox.dataset.index);
+        if (editData.opensources[index]) {
+            editData.opensources[index].enabled = checkbox.checked;
+        }
+    });
+    // 링크 저장
+    document.querySelectorAll('.opensource-links-edit .link-item').forEach(linkItem => {
+        const osIndex = parseInt(linkItem.querySelector('.link-label')?.dataset.index);
+        const linkIndex = parseInt(linkItem.querySelector('.link-label')?.dataset.linkIndex);
+        if (osIndex !== undefined && linkIndex !== undefined && editData.opensources[osIndex]) {
+            const label = linkItem.querySelector('.link-label')?.value || '';
+            const url = linkItem.querySelector('.link-url')?.value || '';
+            if (!editData.opensources[osIndex].links) {
+                editData.opensources[osIndex].links = [];
+            }
+            if (editData.opensources[osIndex].links[linkIndex]) {
+                editData.opensources[osIndex].links[linkIndex] = { label, url };
+            }
+        }
+    });
+}
+
 // OPEN SOURCE 편집 렌더링
-function renderOpensourceEdit() {
+function renderOpensourceEdit(skipSave) {
+    if (!skipSave) {
+        saveOpensourceInputs(); // 렌더링 전에 현재 입력 값 저장
+    }
     const container = document.getElementById('opensourceEditContainer');
     container.innerHTML = '';
     
@@ -275,8 +442,10 @@ function createOpensourceEditItem(os, index) {
             </div>
         </div>
         <div class="form-group">
-            <label>활성화:</label>
-            <input type="checkbox" class="item-enabled" ${os.enabled !== false ? 'checked' : ''} data-index="${index}" data-type="opensource">
+            <label>
+                <input type="checkbox" class="item-enabled" ${os.enabled !== false ? 'checked' : ''} data-index="${index}" data-type="opensource">
+                활성화
+            </label>
         </div>
         <div class="form-group">
             <label>이름:</label>
@@ -303,8 +472,39 @@ function createOpensourceEditItem(os, index) {
     return div;
 }
 
+// EDUCATION 입력 필드 값 저장
+function saveEducationInputs() {
+    document.querySelectorAll('.education-period').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.educations[index]) {
+            editData.educations[index].period = input.value;
+        }
+    });
+    document.querySelectorAll('.education-school').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.educations[index]) {
+            editData.educations[index].school = input.value;
+        }
+    });
+    document.querySelectorAll('.education-major').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.educations[index]) {
+            editData.educations[index].major = input.value;
+        }
+    });
+    document.querySelectorAll('.item-enabled[data-type="education"]').forEach(checkbox => {
+        const index = parseInt(checkbox.dataset.index);
+        if (editData.educations[index]) {
+            editData.educations[index].enabled = checkbox.checked;
+        }
+    });
+}
+
 // EDUCATION 편집 렌더링
-function renderEducationEdit() {
+function renderEducationEdit(skipSave) {
+    if (!skipSave) {
+        saveEducationInputs(); // 렌더링 전에 현재 입력 값 저장
+    }
     const container = document.getElementById('educationEditContainer');
     container.innerHTML = '';
     
@@ -328,8 +528,10 @@ function createEducationEditItem(edu, index) {
             </div>
         </div>
         <div class="form-group">
-            <label>활성화:</label>
-            <input type="checkbox" class="item-enabled" ${edu.enabled !== false ? 'checked' : ''} data-index="${index}" data-type="education">
+            <label>
+                <input type="checkbox" class="item-enabled" ${edu.enabled !== false ? 'checked' : ''} data-index="${index}" data-type="education">
+                활성화
+            </label>
         </div>
         <div class="form-group">
             <label>기간:</label>
@@ -347,8 +549,45 @@ function createEducationEditItem(edu, index) {
     return div;
 }
 
+// ETC 입력 필드 값 저장
+function saveEtcInputs() {
+    document.querySelectorAll('.etc-period').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.etcs[index]) {
+            editData.etcs[index].period = input.value;
+        }
+    });
+    document.querySelectorAll('.etc-title').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.etcs[index]) {
+            editData.etcs[index].title = input.value;
+        }
+    });
+    document.querySelectorAll('.etc-role').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.etcs[index]) {
+            editData.etcs[index].role = input.value;
+        }
+    });
+    document.querySelectorAll('.etc-description').forEach(textarea => {
+        const index = parseInt(textarea.dataset.index);
+        if (editData.etcs[index]) {
+            editData.etcs[index].description = textarea.value;
+        }
+    });
+    document.querySelectorAll('.item-enabled[data-type="etc"]').forEach(checkbox => {
+        const index = parseInt(checkbox.dataset.index);
+        if (editData.etcs[index]) {
+            editData.etcs[index].enabled = checkbox.checked;
+        }
+    });
+}
+
 // ETC 편집 렌더링
-function renderEtcEdit() {
+function renderEtcEdit(skipSave) {
+    if (!skipSave) {
+        saveEtcInputs(); // 렌더링 전에 현재 입력 값 저장
+    }
     const container = document.getElementById('etcEditContainer');
     container.innerHTML = '';
     
@@ -372,8 +611,10 @@ function createEtcEditItem(etc, index) {
             </div>
         </div>
         <div class="form-group">
-            <label>활성화:</label>
-            <input type="checkbox" class="item-enabled" ${etc.enabled !== false ? 'checked' : ''} data-index="${index}" data-type="etc">
+            <label>
+                <input type="checkbox" class="item-enabled" ${etc.enabled !== false ? 'checked' : ''} data-index="${index}" data-type="etc">
+                활성화
+            </label>
         </div>
         <div class="form-group">
             <label>기간:</label>
@@ -395,8 +636,33 @@ function createEtcEditItem(etc, index) {
     return div;
 }
 
+// ARTICLE 입력 필드 값 저장
+function saveArticleInputs() {
+    document.querySelectorAll('.article-title').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.articles[index]) {
+            editData.articles[index].title = input.value;
+        }
+    });
+    document.querySelectorAll('.article-url').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.articles[index]) {
+            editData.articles[index].url = input.value;
+        }
+    });
+    document.querySelectorAll('.item-enabled[data-type="article"]').forEach(checkbox => {
+        const index = parseInt(checkbox.dataset.index);
+        if (editData.articles[index]) {
+            editData.articles[index].enabled = checkbox.checked;
+        }
+    });
+}
+
 // ARTICLE 편집 렌더링
-function renderArticleEdit() {
+function renderArticleEdit(skipSave) {
+    if (!skipSave) {
+        saveArticleInputs(); // 렌더링 전에 현재 입력 값 저장
+    }
     const container = document.getElementById('articleEditContainer');
     container.innerHTML = '';
     
@@ -420,8 +686,10 @@ function createArticleEditItem(article, index) {
             </div>
         </div>
         <div class="form-group">
-            <label>활성화:</label>
-            <input type="checkbox" class="item-enabled" ${article.enabled !== false ? 'checked' : ''} data-index="${index}" data-type="article">
+            <label>
+                <input type="checkbox" class="item-enabled" ${article.enabled !== false ? 'checked' : ''} data-index="${index}" data-type="article">
+                활성화
+            </label>
         </div>
         <div class="form-group">
             <label>제목:</label>
@@ -568,12 +836,18 @@ function toggleCurrentEmployment(index) {
 }
 
 function moveExperience(index, direction) {
+    console.log('moveExperience called', index, direction); // 디버깅용
+    saveExperienceInputs(); // 먼저 현재 입력 값 저장
     if (direction === 'up' && index > 0) {
-        [editData.experiences[index - 1], editData.experiences[index]] = [editData.experiences[index], editData.experiences[index - 1]];
-        renderExperienceEdit();
+        const temp = editData.experiences[index - 1];
+        editData.experiences[index - 1] = editData.experiences[index];
+        editData.experiences[index] = temp;
+        renderExperienceEdit(true); // skipSave=true로 전달하여 중복 저장 방지
     } else if (direction === 'down' && index < editData.experiences.length - 1) {
-        [editData.experiences[index], editData.experiences[index + 1]] = [editData.experiences[index + 1], editData.experiences[index]];
-        renderExperienceEdit();
+        const temp = editData.experiences[index];
+        editData.experiences[index] = editData.experiences[index + 1];
+        editData.experiences[index + 1] = temp;
+        renderExperienceEdit(true); // skipSave=true로 전달하여 중복 저장 방지
     }
 }
 
@@ -596,12 +870,18 @@ function addProject() {
 }
 
 function moveProject(index, direction) {
+    console.log('moveProject called', index, direction, editData.projects.length); // 디버깅용
+    saveProjectInputs(); // 먼저 현재 입력 값 저장
     if (direction === 'up' && index > 0) {
-        [editData.projects[index - 1], editData.projects[index]] = [editData.projects[index], editData.projects[index - 1]];
-        renderProjectEdit();
+        const temp = editData.projects[index - 1];
+        editData.projects[index - 1] = editData.projects[index];
+        editData.projects[index] = temp;
+        renderProjectEdit(true); // skipSave=true로 전달하여 중복 저장 방지
     } else if (direction === 'down' && index < editData.projects.length - 1) {
-        [editData.projects[index], editData.projects[index + 1]] = [editData.projects[index + 1], editData.projects[index]];
-        renderProjectEdit();
+        const temp = editData.projects[index];
+        editData.projects[index] = editData.projects[index + 1];
+        editData.projects[index + 1] = temp;
+        renderProjectEdit(true); // skipSave=true로 전달하여 중복 저장 방지
     }
 }
 
@@ -635,12 +915,18 @@ function addOpensource() {
 }
 
 function moveOpensource(index, direction) {
+    console.log('moveOpensource called', index, direction); // 디버깅용
+    saveOpensourceInputs(); // 먼저 현재 입력 값 저장
     if (direction === 'up' && index > 0) {
-        [editData.opensources[index - 1], editData.opensources[index]] = [editData.opensources[index], editData.opensources[index - 1]];
-        renderOpensourceEdit();
+        const temp = editData.opensources[index - 1];
+        editData.opensources[index - 1] = editData.opensources[index];
+        editData.opensources[index] = temp;
+        renderOpensourceEdit(true); // skipSave=true로 전달하여 중복 저장 방지
     } else if (direction === 'down' && index < editData.opensources.length - 1) {
-        [editData.opensources[index], editData.opensources[index + 1]] = [editData.opensources[index + 1], editData.opensources[index]];
-        renderOpensourceEdit();
+        const temp = editData.opensources[index];
+        editData.opensources[index] = editData.opensources[index + 1];
+        editData.opensources[index + 1] = temp;
+        renderOpensourceEdit(true); // skipSave=true로 전달하여 중복 저장 방지
     }
 }
 
@@ -674,12 +960,18 @@ function addEducation() {
 }
 
 function moveEducation(index, direction) {
+    console.log('moveEducation called', index, direction); // 디버깅용
+    saveEducationInputs(); // 먼저 현재 입력 값 저장
     if (direction === 'up' && index > 0) {
-        [editData.educations[index - 1], editData.educations[index]] = [editData.educations[index], editData.educations[index - 1]];
-        renderEducationEdit();
+        const temp = editData.educations[index - 1];
+        editData.educations[index - 1] = editData.educations[index];
+        editData.educations[index] = temp;
+        renderEducationEdit(true); // skipSave=true로 전달하여 중복 저장 방지
     } else if (direction === 'down' && index < editData.educations.length - 1) {
-        [editData.educations[index], editData.educations[index + 1]] = [editData.educations[index + 1], editData.educations[index]];
-        renderEducationEdit();
+        const temp = editData.educations[index];
+        editData.educations[index] = editData.educations[index + 1];
+        editData.educations[index + 1] = temp;
+        renderEducationEdit(true); // skipSave=true로 전달하여 중복 저장 방지
     }
 }
 
@@ -701,12 +993,18 @@ function addEtc() {
 }
 
 function moveEtc(index, direction) {
+    console.log('moveEtc called', index, direction); // 디버깅용
+    saveEtcInputs(); // 먼저 현재 입력 값 저장
     if (direction === 'up' && index > 0) {
-        [editData.etcs[index - 1], editData.etcs[index]] = [editData.etcs[index], editData.etcs[index - 1]];
-        renderEtcEdit();
+        const temp = editData.etcs[index - 1];
+        editData.etcs[index - 1] = editData.etcs[index];
+        editData.etcs[index] = temp;
+        renderEtcEdit(true); // skipSave=true로 전달하여 중복 저장 방지
     } else if (direction === 'down' && index < editData.etcs.length - 1) {
-        [editData.etcs[index], editData.etcs[index + 1]] = [editData.etcs[index + 1], editData.etcs[index]];
-        renderEtcEdit();
+        const temp = editData.etcs[index];
+        editData.etcs[index] = editData.etcs[index + 1];
+        editData.etcs[index + 1] = temp;
+        renderEtcEdit(true); // skipSave=true로 전달하여 중복 저장 방지
     }
 }
 
@@ -726,12 +1024,18 @@ function addArticle() {
 }
 
 function moveArticle(index, direction) {
+    console.log('moveArticle called', index, direction); // 디버깅용
+    saveArticleInputs(); // 먼저 현재 입력 값 저장
     if (direction === 'up' && index > 0) {
-        [editData.articles[index - 1], editData.articles[index]] = [editData.articles[index], editData.articles[index - 1]];
-        renderArticleEdit();
+        const temp = editData.articles[index - 1];
+        editData.articles[index - 1] = editData.articles[index];
+        editData.articles[index] = temp;
+        renderArticleEdit(true); // skipSave=true로 전달하여 중복 저장 방지
     } else if (direction === 'down' && index < editData.articles.length - 1) {
-        [editData.articles[index], editData.articles[index + 1]] = [editData.articles[index + 1], editData.articles[index]];
-        renderArticleEdit();
+        const temp = editData.articles[index];
+        editData.articles[index] = editData.articles[index + 1];
+        editData.articles[index + 1] = temp;
+        renderArticleEdit(true); // skipSave=true로 전달하여 중복 저장 방지
     }
 }
 

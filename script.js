@@ -247,8 +247,11 @@ function renderProfile() {
     const data = ProfileData.load();
 
     // 프로필 섹션
+    const profileSection = document.getElementById('profileSection');
+    if (!profileSection) return; // edit.html에서는 실행하지 않음
+    
     if (data.profile.enabled) {
-        document.getElementById('profileSection').classList.remove('hidden');
+        profileSection.classList.remove('hidden');
         const profileImg = document.getElementById('profileImage');
         if (data.profile.image) {
             profileImg.src = data.profile.image;
