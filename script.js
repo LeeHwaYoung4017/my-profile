@@ -811,45 +811,97 @@ function calculateTotalExperience(experiences) {
 
 function formatDescription(text) {
     if (!text) return '';
-    // HTML 이스케이프
+    
+    // HTML 이스케이프 헬퍼 함수
     const escapeHtml = (str) => {
         const div = document.createElement('div');
         div.textContent = str;
         return div.innerHTML;
     };
     
-    const lines = text.split('\n');
-    let inList = false;
-    let result = '';
+    // HTML 태그가 포함되어 있는지 확인
+    const hasHtmlTags = /<[^>]+>/g.test(text);
     
-    lines.forEach(line => {
-        const trimmed = line.trim();
-        if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
-            if (!inList) {
-                result += '<ul>';
-                inList = true;
-            }
-            result += `<li>${escapeHtml(trimmed.substring(2))}</li>`;
-        } else {
-            if (inList) {
-                result += '</ul>';
-                inList = false;
-            }
-            if (line.trim()) {
-                // 빈 줄이 아닌 경우
-                result += `<p>${escapeHtml(line)}</p>`;
-            } else {
-                // 빈 줄인 경우
-                result += '<br>';
+    if (hasHtmlTags) {
+        // HTML이 포함된 경우: HTML을 그대로 반환 (안전하게)
+        // XSS 방지를 위해 허용된 태그만 유지
+        
+        // 먼저 <div>와 <p> 태그를 <br>로 변환 (저장 시 변환되지 않은 경우 대비)
+        let processedText = text;
+        processedText = processedText.replace(/<\/div>/gi, '<br>');
+        processedText = processedText.replace(/<\/p>/gi, '<br>');
+        processedText = processedText.replace(/<div[^>]*>/gi, '');
+        processedText = processedText.replace(/<p[^>]*>/gi, '');
+        
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = processedText;
+        
+        // 안전한 태그만 허용 (a, br, ul, ol, li, strong, em, u)
+        const allowedTags = ['a', 'br', 'ul', 'ol', 'li', 'strong', 'em', 'u'];
+        const walker = document.createTreeWalker(
+            tempDiv,
+            NodeFilter.SHOW_ELEMENT,
+            null,
+            false
+        );
+        
+        const nodesToRemove = [];
+        let node;
+        while (node = walker.nextNode()) {
+            if (!allowedTags.includes(node.tagName.toLowerCase())) {
+                nodesToRemove.push(node);
             }
         }
-    });
-    
-    if (inList) {
-        result += '</ul>';
+        
+        nodesToRemove.forEach(n => {
+            const parent = n.parentNode;
+            while (n.firstChild) {
+                parent.insertBefore(n.firstChild, n);
+            }
+            parent.removeChild(n);
+        });
+        
+        // <br> 태그가 제대로 표시되도록 보장
+        let result = tempDiv.innerHTML;
+        // <br> 태그 정규화
+        result = result.replace(/<br\s*\/?>/gi, '<br>');
+        
+        return result;
+    } else {
+        // HTML이 없는 경우 (기존 텍스트 데이터): \n을 <br>로 변환
+        const lines = text.split('\n');
+        let inList = false;
+        let result = '';
+        
+        lines.forEach(line => {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+                if (!inList) {
+                    result += '<ul>';
+                    inList = true;
+                }
+                result += `<li>${escapeHtml(trimmed.substring(2))}</li>`;
+            } else {
+                if (inList) {
+                    result += '</ul>';
+                    inList = false;
+                }
+                if (line.trim()) {
+                    // 빈 줄이 아닌 경우
+                    result += `${escapeHtml(line)}<br>`;
+                } else {
+                    // 빈 줄인 경우
+                    result += '<br>';
+                }
+            }
+        });
+        
+        if (inList) {
+            result += '</ul>';
+        }
+        
+        return result || escapeHtml(text);
     }
-    
-    return result || escapeHtml(text);
 }
 
 // 기본 데이터로 리셋

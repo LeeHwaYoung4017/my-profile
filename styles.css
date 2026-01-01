@@ -323,6 +323,15 @@ body {
     color: #666;
     line-height: 1.7;
     margin-bottom: 10px;
+    white-space: pre-wrap; /* 줄바꿈 유지 */
+}
+
+.project-description p {
+    margin: 0 0 8px 0; /* p 태그 간격 */
+}
+
+.project-description br {
+    line-height: 1.7; /* br 태그 줄바꿈 */
 }
 
 .project-skills {

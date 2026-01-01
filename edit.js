@@ -304,47 +304,95 @@ function saveProjectInputs() {
     document.querySelectorAll('.project-description').forEach(editor => {
         const index = parseInt(editor.dataset.index);
         if (editData.projects[index]) {
-            // contenteditable div의 실제 DOM 구조를 직접 순회하여 텍스트 추출
+            // contenteditable의 DOM 구조를 직접 순회하여 텍스트와 줄바꿈 추출
             const clone = editor.cloneNode(true);
-            let text = '';
+            let result = '';
+            let hasLink = false;
             
-            // 모든 자식 노드를 순회
-            const processNode = (node) => {
+            // 텍스트와 링크 추출 헬퍼 함수
+            const extractTextAndLinks = (element) => {
+                let content = '';
+                Array.from(element.childNodes).forEach(child => {
+                    if (child.nodeType === Node.TEXT_NODE) {
+                        content += child.textContent;
+                    } else if (child.nodeType === Node.ELEMENT_NODE) {
+                        const childTag = child.tagName.toLowerCase();
+                        if (childTag === 'a') {
+                            hasLink = true;
+                            content += child.outerHTML;
+                        } else if (childTag === 'br') {
+                            content += '<br>';
+                        } else {
+                            content += extractTextAndLinks(child);
+                        }
+                    }
+                });
+                return content;
+            };
+            
+            // 모든 자식 노드 순회
+            const allElements = Array.from(clone.childNodes);
+            
+            allElements.forEach((node, idx) => {
                 if (node.nodeType === Node.TEXT_NODE) {
-                    text += node.textContent;
+                    // 텍스트 노드
+                    const text = node.textContent;
+                    if (text.trim()) {
+                        result += text;
+                    }
                 } else if (node.nodeType === Node.ELEMENT_NODE) {
                     const tagName = node.tagName.toLowerCase();
-                    // 줄바꿈을 나타내는 태그들
-                    if (tagName === 'div' || tagName === 'p' || tagName === 'li') {
-                        // 이전에 텍스트가 있었다면 줄바꿈 추가
-                        if (text && !text.endsWith('\n')) {
-                            text += '\n';
-                        }
-                        // 자식 노드 처리
-                        Array.from(node.childNodes).forEach(processNode);
-                        // 닫는 태그 후에도 줄바꿈 (div, p의 경우)
-                        if (tagName === 'div' || tagName === 'p') {
-                            if (!text.endsWith('\n')) {
-                                text += '\n';
+                    
+                    // 링크 태그 확인
+                    if (tagName === 'a') {
+                        hasLink = true;
+                        result += node.outerHTML;
+                    } else if (tagName === 'div' || tagName === 'p') {
+                        // 블록 태그: 내용 추출 후 줄바꿈 추가
+                        const blockContent = extractTextAndLinks(node);
+                        if (blockContent.trim()) {
+                            // 이전에 내용이 있었다면 줄바꿈 추가
+                            if (result && result.trim() && !result.endsWith('<br>') && !result.endsWith('<br/>')) {
+                                result += '<br>';
+                            }
+                            result += blockContent;
+                            // 블록 종료 후 줄바꿈 추가
+                            result += '<br>';
+                        } else {
+                            // 빈 블록은 줄바꿈만 추가
+                            if (result && result.trim() && !result.endsWith('<br>') && !result.endsWith('<br/>')) {
+                                result += '<br>';
                             }
                         }
                     } else if (tagName === 'br') {
-                        text += '\n';
+                        result += '<br>';
                     } else {
-                        // 다른 태그는 자식만 처리
-                        Array.from(node.childNodes).forEach(processNode);
+                        // 다른 태그는 내용만 추출
+                        result += extractTextAndLinks(node);
                     }
                 }
-            };
+            });
             
-            Array.from(clone.childNodes).forEach(processNode);
+            // 연속된 <br> 정리 (최대 2개까지만)
+            result = result.replace(/(<br\s*\/?>){3,}/gi, '<br><br>');
             
-            // 연속된 줄바꿈 정리 (최대 2개까지만)
-            text = text.replace(/\n{3,}/g, '\n\n');
+            // 앞뒤 <br> 정리
+            result = result.replace(/^(<br\s*\/?>)+/i, '');
+            result = result.replace(/(<br\s*\/?>)+$/i, '');
+            
             // 앞뒤 공백 제거
-            text = text.trim();
+            result = result.trim();
             
-            editData.projects[index].description = text;
+            // 링크가 있거나 HTML 태그가 있으면 HTML로 저장, 없으면 텍스트로 저장
+            if (hasLink || result.includes('<')) {
+                editData.projects[index].description = result;
+            } else {
+                // 텍스트만 있는 경우
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = result;
+                const text = tempDiv.textContent || tempDiv.innerText || '';
+                editData.projects[index].description = text.trim();
+            }
         }
     });
     document.querySelectorAll('.project-skills').forEach(input => {
@@ -1930,14 +1978,24 @@ function formatProjectDescriptionForEdit(description) {
     if (!description) return '';
     // 이미 HTML 태그가 있으면 그대로 반환
     if (description.includes('<') && description.includes('>')) {
-        return description;
+        // HTML인 경우: contenteditable에서 첫 번째 <br>가 제대로 표시되도록 처리
+        // 첫 번째 <br> 앞에 빈 div를 추가하거나, <br>를 <div><br></div>로 변환
+        let html = description;
+        // 시작 부분의 <br>를 <div><br></div>로 변환하여 contenteditable에서 인식되도록
+        html = html.replace(/^(<br\s*\/?>)/i, '<div><br></div>');
+        return html;
     }
     // 텍스트 형식이면 \n을 <br>로 변환하고 HTML 특수문자 이스케이프
-    return description
+    let text = description
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/\n/g, '<br>');
+    // 첫 번째 <br> 앞에 빈 div 추가
+    if (text.startsWith('<br>')) {
+        text = '<div><br></div>' + text.substring(4);
+    }
+    return text;
 }
 
 // 프로젝트 설명 포맷팅 함수
@@ -1949,23 +2007,173 @@ function formatProjectText(index, command) {
     document.execCommand(command, false, null);
 }
 
-// 프로젝트 설명 링크 삽입 함수
-function insertProjectLink(index) {
-    const editor = document.querySelector(`.project-description[data-index="${index}"]`);
+// 현재 링크를 삽입할 프로젝트 인덱스 저장
+let currentProjectIndexForLink = null;
+// 커서 위치 저장
+let savedSelection = null;
+
+// 커서 위치 저장 함수
+function saveSelection() {
+    const editor = document.querySelector(`.project-description[data-index="${currentProjectIndexForLink}"]`);
     if (!editor) return;
     
-    editor.focus();
-    
-    const url = prompt('링크 URL을 입력하세요:');
-    if (!url) return;
-    
-    const text = prompt('링크 텍스트를 입력하세요 (선택사항):') || url;
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.target = '_blank';
-    link.textContent = text;
-    
-    document.execCommand('insertHTML', false, link.outerHTML);
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        // 편집기 내부의 범위인지 확인
+        if (editor.contains(range.commonAncestorContainer) || range.commonAncestorContainer === editor) {
+            savedSelection = range.cloneRange();
+        }
+    }
 }
+
+// 커서 위치 복원 함수
+function restoreSelection() {
+    const editor = document.querySelector(`.project-description[data-index="${currentProjectIndexForLink}"]`);
+    if (!editor || !savedSelection) return false;
+    
+    try {
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(savedSelection);
+        editor.focus();
+        return true;
+    } catch (e) {
+        console.error('커서 위치 복원 실패:', e);
+        return false;
+    }
+}
+
+// 프로젝트 설명 링크 삽입 함수 (모달 열기)
+function insertProjectLink(index) {
+    currentProjectIndexForLink = index;
+    const editor = document.querySelector(`.project-description[data-index="${index}"]`);
+    if (editor) {
+        // 현재 커서 위치 저장
+        saveSelection();
+    }
+    
+    const modal = document.getElementById('linkModal');
+    if (modal) {
+        // 입력 필드 초기화
+        document.getElementById('linkModalUrl').value = '';
+        document.getElementById('linkModalText').value = '';
+        modal.style.display = 'block';
+        // URL 입력 필드에 포커스
+        setTimeout(() => {
+            document.getElementById('linkModalUrl').focus();
+        }, 100);
+    }
+}
+
+// 모달 닫기
+function closeLinkModal() {
+    const modal = document.getElementById('linkModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    currentProjectIndexForLink = null;
+    savedSelection = null;
+}
+
+// 클립보드에서 붙여넣기
+async function pasteFromClipboard(type) {
+    try {
+        const text = await navigator.clipboard.readText();
+        if (type === 'url') {
+            document.getElementById('linkModalUrl').value = text;
+        } else if (type === 'text') {
+            document.getElementById('linkModalText').value = text;
+        }
+    } catch (err) {
+        // 클립보드 접근 실패 시 수동 입력 안내
+        alert('클립보드 접근에 실패했습니다. 직접 입력해주세요.');
+    }
+}
+
+// 모달에서 링크 삽입
+function insertLinkFromModal() {
+    if (currentProjectIndexForLink === null) return;
+    
+    const url = document.getElementById('linkModalUrl').value.trim();
+    if (!url) {
+        alert('URL을 입력해주세요.');
+        return;
+    }
+    
+    const text = document.getElementById('linkModalText').value.trim() || url;
+    
+    const editor = document.querySelector(`.project-description[data-index="${currentProjectIndexForLink}"]`);
+    if (!editor) {
+        closeLinkModal();
+        return;
+    }
+    
+    // 커서 위치 복원 시도
+    const restored = restoreSelection();
+    if (!restored) {
+        // 복원 실패 시 편집기 끝에 커서 이동
+        editor.focus();
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false); // 끝으로 이동
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+    
+    // 링크 HTML 생성
+    const linkHtml = `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    
+    // 커서 위치에 링크 삽입
+    document.execCommand('insertHTML', false, linkHtml);
+    
+    // 커서를 링크 뒤로 이동
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        range.collapse(false); // 링크 뒤로 이동
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+    
+    savedSelection = null;
+    closeLinkModal();
+}
+
+// 모달 외부 클릭 시 닫기
+window.onclick = function(event) {
+    const modal = document.getElementById('linkModal');
+    if (event.target === modal) {
+        closeLinkModal();
+    }
+}
+
+// 모달에서 Enter 키로 삽입, ESC 키로 닫기
+document.addEventListener('DOMContentLoaded', function() {
+    const urlInput = document.getElementById('linkModalUrl');
+    const textInput = document.getElementById('linkModalText');
+    
+    if (urlInput) {
+        urlInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                insertLinkFromModal();
+            } else if (e.key === 'Escape') {
+                closeLinkModal();
+            }
+        });
+    }
+    
+    if (textInput) {
+        textInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                e.preventDefault();
+                insertLinkFromModal();
+            } else if (e.key === 'Escape') {
+                closeLinkModal();
+            }
+        });
+    }
+});
 
