@@ -665,7 +665,8 @@ function formatDescription(text) {
 
 // 기본 데이터로 리셋
 function resetToDefault() {
-    if (confirm('저장된 모든 데이터가 삭제되고 기본 데이터로 초기화됩니다. 계속하시겠습니까?')) {
+    const message = '저장된 모든 데이터가 삭제되고 기본 데이터로 초기화됩니다.\n\n개인정보(이름, 이메일, 전화번호 등)도 모두 초기값으로 되돌아갑니다.\n\n정말로 계속하시겠습니까?';
+    if (confirm(message)) {
         localStorage.removeItem('profileData');
         alert('기본 데이터로 리셋되었습니다.');
         location.reload();
@@ -680,6 +681,78 @@ if (editBtn) {
     });
 }
 
+// 최상단 이동 버튼
+function initScrollToTop() {
+    const scrollBtn = document.getElementById('scrollToTopBtn');
+    if (!scrollBtn) return;
+    
+    window.addEventListener('scroll', function() {
+        if (window.pageYOffset > 300) {
+            scrollBtn.style.display = 'block';
+        } else {
+            scrollBtn.style.display = 'none';
+        }
+    });
+    
+    scrollBtn.addEventListener('click', function() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+}
+
+// PDF 다운로드 함수
+function downloadPDF() {
+    // html2pdf 라이브러리 사용
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    script.onload = function() {
+        // 버튼들 숨기기
+        const headerActions = document.getElementById('headerActions');
+        const scrollBtn = document.getElementById('scrollToTopBtn');
+        const originalHeaderDisplay = headerActions ? headerActions.style.display : '';
+        const originalScrollDisplay = scrollBtn ? scrollBtn.style.display : '';
+        
+        if (headerActions) headerActions.style.display = 'none';
+        if (scrollBtn) scrollBtn.style.display = 'none';
+        
+        const element = document.querySelector('.container');
+        const opt = {
+            margin: [10, 10, 10, 10],
+            filename: '이력서.pdf',
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+                scale: 2, 
+                useCORS: true,
+                logging: false,
+                letterRendering: true
+            },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { 
+                mode: ['avoid-all', 'css', 'legacy'],
+                before: '.page-break-before',
+                after: '.page-break-after',
+                avoid: ['.section', '.experience-item', '.project-item', '.education-item', '.etc-item']
+            }
+        };
+        
+        html2pdf().set(opt).from(element).save().then(() => {
+            // 복원
+            if (headerActions) headerActions.style.display = originalHeaderDisplay;
+            if (scrollBtn) scrollBtn.style.display = originalScrollDisplay;
+        }).catch(() => {
+            // 에러 시에도 복원
+            if (headerActions) headerActions.style.display = originalHeaderDisplay;
+            if (scrollBtn) scrollBtn.style.display = originalScrollDisplay;
+        });
+    };
+    document.head.appendChild(script);
+}
+
 // 페이지 로드 시 렌더링
-document.addEventListener('DOMContentLoaded', renderProfile);
+document.addEventListener('DOMContentLoaded', function() {
+    renderProfile();
+    initScrollToTop();
+});
 

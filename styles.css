@@ -24,7 +24,7 @@ body {
     margin-bottom: 20px;
 }
 
-.edit-btn, .save-btn, .cancel-btn, .reset-btn {
+.edit-btn, .save-btn, .cancel-btn, .reset-btn, .pdf-btn, .view-btn {
     padding: 10px 20px;
     background-color: #007bff;
     color: white;
@@ -33,6 +33,9 @@ body {
     cursor: pointer;
     font-size: 14px;
     margin-left: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .reset-btn {
@@ -42,6 +45,22 @@ body {
 
 .reset-btn:hover {
     background-color: #e0a800;
+}
+
+.pdf-btn {
+    background-color: #dc3545;
+}
+
+.pdf-btn:hover {
+    background-color: #c82333;
+}
+
+.view-btn {
+    background-color: #28a745;
+}
+
+.view-btn:hover {
+    background-color: #218838;
 }
 
 .edit-btn:hover, .save-btn:hover {
@@ -60,6 +79,8 @@ body {
     margin-bottom: 40px;
     padding-bottom: 30px;
     border-bottom: 2px solid #e0e0e0;
+    page-break-inside: avoid;
+    break-inside: avoid;
 }
 
 .profile-header {
@@ -133,6 +154,8 @@ body {
     margin-bottom: 40px;
     padding-bottom: 30px;
     border-bottom: 1px solid #e0e0e0;
+    page-break-inside: avoid;
+    break-inside: avoid;
 }
 
 .section.hidden {
@@ -157,6 +180,8 @@ body {
 /* SKILL 스타일 */
 .skill-category {
     margin-bottom: 25px;
+    page-break-inside: avoid;
+    break-inside: avoid;
 }
 
 .skill-category h3 {
@@ -185,6 +210,8 @@ body {
     margin-bottom: 30px;
     padding-left: 20px;
     border-left: 3px solid #e0e0e0;
+    page-break-inside: avoid;
+    break-inside: avoid;
 }
 
 .experience-header {
@@ -254,6 +281,8 @@ body {
     padding: 15px;
     background-color: #f9f9f9;
     border-radius: 6px;
+    page-break-inside: avoid;
+    break-inside: avoid;
 }
 
 .project-header {
@@ -318,6 +347,8 @@ body {
     padding: 15px;
     background-color: #f9f9f9;
     border-radius: 6px;
+    page-break-inside: avoid;
+    break-inside: avoid;
 }
 
 .opensource-name {
@@ -354,6 +385,8 @@ body {
     margin-bottom: 25px;
     padding-left: 20px;
     border-left: 3px solid #e0e0e0;
+    page-break-inside: avoid;
+    break-inside: avoid;
 }
 
 .education-period {
@@ -381,6 +414,8 @@ body {
     margin-bottom: 20px;
     padding-left: 20px;
     border-left: 3px solid #e0e0e0;
+    page-break-inside: avoid;
+    break-inside: avoid;
 }
 
 .etc-period {
