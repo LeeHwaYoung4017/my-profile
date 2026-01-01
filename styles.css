@@ -509,6 +509,115 @@ body {
     font-style: italic;
 }
 
+/* 자기소개서 스타일 */
+.cover-letter-item {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.cover-letter-header {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.cover-letter-header h3 {
+    font-size: 20px;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.cover-letter-subtitle {
+    font-size: 14px;
+    color: #666;
+    font-style: italic;
+    margin-top: 5px;
+    font-weight: normal;
+}
+
+.cover-letter-content {
+    line-height: 1.8;
+    white-space: pre-wrap;
+    color: #333;
+}
+
+/* 포트폴리오 스타일 */
+.portfolio-item {
+    margin-bottom: 40px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 6px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+}
+
+.portfolio-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.portfolio-header h3 {
+    font-size: 20px;
+    color: #2c3e50;
+    margin: 0;
+}
+
+.portfolio-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 8px 16px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.portfolio-link-btn:hover {
+    background-color: #0056b3;
+}
+
+.portfolio-image-container {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.portfolio-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.portfolio-description {
+    margin: 15px 0;
+    line-height: 1.8;
+    color: #333;
+}
+
+.portfolio-skills {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.portfolio-skills strong {
+    font-size: 13px;
+    color: #555;
+    display: block;
+    margin-bottom: 8px;
+}
+
 @media (max-width: 768px) {
     .profile-header {
         flex-direction: column;

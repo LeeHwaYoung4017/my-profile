@@ -5,7 +5,12 @@ let editData = null;
 function loadEditData() {
     const saved = localStorage.getItem('profileData');
     if (saved) {
-        editData = JSON.parse(saved);
+        try {
+            editData = JSON.parse(saved);
+        } catch (e) {
+            console.error('편집 화면: 데이터 파싱 오류:', e);
+            editData = ProfileData.getDefaultData();
+        }
     } else {
         editData = ProfileData.getDefaultData();
     }
@@ -41,7 +46,9 @@ function renderEditForm() {
         opensource: 3,
         education: 4,
         etc: 5,
-        article: 6
+        article: 6,
+        coverLetter: 7,
+        portfolio: 8
     };
     document.getElementById('sectionOrderExperience').value = sectionOrder.experience || 1;
     document.getElementById('sectionOrderProject').value = sectionOrder.project || 2;
@@ -49,6 +56,8 @@ function renderEditForm() {
     document.getElementById('sectionOrderEducation').value = sectionOrder.education || 4;
     document.getElementById('sectionOrderEtc').value = sectionOrder.etc || 5;
     document.getElementById('sectionOrderArticle').value = sectionOrder.article || 6;
+    document.getElementById('sectionOrderCoverLetter').value = sectionOrder.coverLetter || 7;
+    document.getElementById('sectionOrderPortfolio').value = sectionOrder.portfolio || 8;
 
     // SKILL
     renderSkillEdit();
@@ -70,6 +79,27 @@ function renderEditForm() {
 
     // ARTICLE
     renderArticleEdit();
+
+    // 자기소개서
+    renderCoverLetterEdit();
+
+    // 포트폴리오
+    renderPortfolioEdit();
+
+    // 섹션 활성화 상태 설정
+    document.getElementById('editSkillEnabled').checked = editData.enabled.skill !== false;
+    document.getElementById('editExperienceEnabled').checked = editData.enabled.experience !== false;
+    document.getElementById('editProjectEnabled').checked = editData.enabled.project !== false;
+    document.getElementById('editOpensourceEnabled').checked = editData.enabled.opensource !== false;
+    document.getElementById('editEducationEnabled').checked = editData.enabled.education !== false;
+    document.getElementById('editEtcEnabled').checked = editData.enabled.etc !== false;
+    document.getElementById('editArticleEnabled').checked = editData.enabled.article !== false;
+    if (document.getElementById('editCoverLetterEnabled')) {
+        document.getElementById('editCoverLetterEnabled').checked = editData.enabled.coverLetter !== false;
+    }
+    if (document.getElementById('editPortfolioEnabled')) {
+        document.getElementById('editPortfolioEnabled').checked = editData.enabled.portfolio !== false;
+    }
 }
 
 // SKILL 편집 렌더링
@@ -271,10 +301,50 @@ function saveProjectInputs() {
             editData.projects[index].period = input.value;
         }
     });
-    document.querySelectorAll('.project-description').forEach(textarea => {
-        const index = parseInt(textarea.dataset.index);
+    document.querySelectorAll('.project-description').forEach(editor => {
+        const index = parseInt(editor.dataset.index);
         if (editData.projects[index]) {
-            editData.projects[index].description = textarea.value;
+            // contenteditable div의 실제 DOM 구조를 직접 순회하여 텍스트 추출
+            const clone = editor.cloneNode(true);
+            let text = '';
+            
+            // 모든 자식 노드를 순회
+            const processNode = (node) => {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    text += node.textContent;
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    const tagName = node.tagName.toLowerCase();
+                    // 줄바꿈을 나타내는 태그들
+                    if (tagName === 'div' || tagName === 'p' || tagName === 'li') {
+                        // 이전에 텍스트가 있었다면 줄바꿈 추가
+                        if (text && !text.endsWith('\n')) {
+                            text += '\n';
+                        }
+                        // 자식 노드 처리
+                        Array.from(node.childNodes).forEach(processNode);
+                        // 닫는 태그 후에도 줄바꿈 (div, p의 경우)
+                        if (tagName === 'div' || tagName === 'p') {
+                            if (!text.endsWith('\n')) {
+                                text += '\n';
+                            }
+                        }
+                    } else if (tagName === 'br') {
+                        text += '\n';
+                    } else {
+                        // 다른 태그는 자식만 처리
+                        Array.from(node.childNodes).forEach(processNode);
+                    }
+                }
+            };
+            
+            Array.from(clone.childNodes).forEach(processNode);
+            
+            // 연속된 줄바꿈 정리 (최대 2개까지만)
+            text = text.replace(/\n{3,}/g, '\n\n');
+            // 앞뒤 공백 제거
+            text = text.trim();
+            
+            editData.projects[index].description = text;
         }
     });
     document.querySelectorAll('.project-skills').forEach(input => {
@@ -313,7 +383,16 @@ function renderProjectEdit(skipSave) {
         saveProjectInputs(); // 렌더링 전에 현재 입력 값 저장
     }
     const container = document.getElementById('projectEditContainer');
+    if (!container) {
+        console.error('renderProjectEdit: projectEditContainer 요소를 찾을 수 없습니다.');
+        return;
+    }
     container.innerHTML = '';
+    
+    if (!editData || !editData.projects || !Array.isArray(editData.projects)) {
+        console.error('renderProjectEdit: 프로젝트 데이터가 유효하지 않습니다.', editData);
+        return;
+    }
     
     editData.projects.forEach((proj, index) => {
         const projDiv = createProjectEditItem(proj, index);
@@ -346,7 +425,7 @@ function createProjectEditItem(proj, index) {
         </div>
         <div class="form-group">
             <label>고객사 (선택사항):</label>
-            <input type="text" class="project-client" value="${proj.client || ''}" data-index="${index}" placeholder="예: 코웨이, 티지소프트">
+            <input type="text" class="project-client" value="${proj.client || ''}" data-index="${index}" placeholder="예: 삼성전자, SK하이닉스">
         </div>
         <div class="form-group">
             <label>기간:</label>
@@ -354,7 +433,15 @@ function createProjectEditItem(proj, index) {
         </div>
         <div class="form-group">
             <label>설명:</label>
-            <textarea class="project-description" data-index="${index}" rows="6">${proj.description || ''}</textarea>
+            <div class="rich-text-editor project-editor">
+                <div class="editor-toolbar">
+                    <button type="button" class="toolbar-btn" onclick="formatProjectText(${index}, 'bold')" title="굵게">B</button>
+                    <button type="button" class="toolbar-btn" onclick="formatProjectText(${index}, 'italic')" title="기울임">I</button>
+                    <button type="button" class="toolbar-btn" onclick="formatProjectText(${index}, 'underline')" title="밑줄">U</button>
+                    <button type="button" class="toolbar-btn" onclick="insertProjectLink(${index})" title="링크 삽입">🔗</button>
+                </div>
+                <div class="project-description" contenteditable="true" data-index="${index}" style="min-height: 150px; border: 1px solid #ddd; padding: 10px; border-radius: 4px; outline: none; white-space: pre-wrap;">${formatProjectDescriptionForEdit(proj.description || '')}</div>
+            </div>
         </div>
         <div class="form-group">
             <label>기술 스택 (쉼표로 구분):</label>
@@ -1044,8 +1131,256 @@ function deleteArticle(index) {
     renderArticleEdit();
 }
 
+// 자기소개서 관련 함수들
+function addCoverLetter() {
+    saveCoverLetterInputs(); // 먼저 현재 입력 값 저장
+    if (!editData.coverLetters) {
+        editData.coverLetters = [];
+    }
+    editData.coverLetters.push({
+        title: '',
+        content: '',
+        company: '',
+        enabled: true
+    });
+    renderCoverLetterEdit();
+}
+
+function renderCoverLetterEdit(skipSave) {
+    if (!skipSave) {
+        saveCoverLetterInputs(); // 렌더링 전에 현재 입력 값 저장
+    }
+    if (!editData.coverLetters) {
+        editData.coverLetters = [];
+    }
+    const container = document.getElementById('coverLetterEditContainer');
+    container.innerHTML = '';
+    
+    editData.coverLetters.forEach((letter, index) => {
+        const letterDiv = createCoverLetterEditItem(letter, index);
+        container.appendChild(letterDiv);
+    });
+}
+
+function createCoverLetterEditItem(letter, index) {
+    const div = document.createElement('div');
+    div.className = 'edit-item';
+    div.setAttribute('data-index', index);
+    div.innerHTML = `
+        <div class="edit-item-header">
+            <span class="edit-item-title">${letter.title || '새 자기소개서'}</span>
+            <div style="display: flex; gap: 5px;">
+                <button type="button" class="move-btn" onclick="moveCoverLetter(${index}, 'up')" title="위로" ${index === 0 ? 'disabled' : ''}><i class="fas fa-arrow-up"></i></button>
+                <button type="button" class="move-btn" onclick="moveCoverLetter(${index}, 'down')" title="아래로" ${index === (editData.coverLetters.length - 1) ? 'disabled' : ''}><i class="fas fa-arrow-down"></i></button>
+                <button type="button" class="delete-btn" onclick="deleteCoverLetter(${index})">삭제</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" class="item-enabled" ${letter.enabled !== false ? 'checked' : ''} data-index="${index}" data-type="coverLetter">
+                활성화
+            </label>
+        </div>
+        <div class="form-group">
+            <label>제목:</label>
+            <input type="text" class="cover-letter-title" value="${letter.title || ''}" data-index="${index}" placeholder="예: 삼성전자 지원 자기소개서">
+        </div>
+        <div class="form-group">
+            <label>소문구 (선택사항):</label>
+            <input type="text" class="cover-letter-company" value="${letter.company || ''}" data-index="${index}" placeholder="예: 새로운 도전을 향해">
+        </div>
+        <div class="form-group">
+            <label>내용:</label>
+            <textarea class="cover-letter-content" data-index="${index}" rows="10" placeholder="자기소개서 내용을 입력하세요">${letter.content || ''}</textarea>
+        </div>
+    `;
+    return div;
+}
+
+function saveCoverLetterInputs() {
+    if (!editData.coverLetters) return;
+    document.querySelectorAll('.cover-letter-title').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.coverLetters[index]) {
+            editData.coverLetters[index].title = input.value;
+        }
+    });
+    document.querySelectorAll('.cover-letter-company').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.coverLetters[index]) {
+            editData.coverLetters[index].company = input.value;
+        }
+    });
+    document.querySelectorAll('.cover-letter-content').forEach(textarea => {
+        const index = parseInt(textarea.dataset.index);
+        if (editData.coverLetters[index]) {
+            editData.coverLetters[index].content = textarea.value;
+        }
+    });
+    document.querySelectorAll('.item-enabled[data-type="coverLetter"]').forEach(checkbox => {
+        const index = parseInt(checkbox.dataset.index);
+        if (editData.coverLetters[index]) {
+            editData.coverLetters[index].enabled = checkbox.checked;
+        }
+    });
+}
+
+function moveCoverLetter(index, direction) {
+    if (!editData.coverLetters) return;
+    saveCoverLetterInputs();
+    if (direction === 'up' && index > 0) {
+        const temp = editData.coverLetters[index - 1];
+        editData.coverLetters[index - 1] = editData.coverLetters[index];
+        editData.coverLetters[index] = temp;
+        renderCoverLetterEdit(true); // skipSave=true로 전달하여 중복 저장 방지
+    } else if (direction === 'down' && index < editData.coverLetters.length - 1) {
+        const temp = editData.coverLetters[index];
+        editData.coverLetters[index] = editData.coverLetters[index + 1];
+        editData.coverLetters[index + 1] = temp;
+        renderCoverLetterEdit(true); // skipSave=true로 전달하여 중복 저장 방지
+    }
+}
+
+function deleteCoverLetter(index) {
+    if (!editData.coverLetters) return;
+    saveCoverLetterInputs(); // 먼저 현재 입력 값 저장
+    editData.coverLetters.splice(index, 1);
+    renderCoverLetterEdit(true); // skipSave=true로 전달하여 중복 저장 방지
+}
+
+// 포트폴리오 관련 함수들
+function addPortfolio() {
+    savePortfolioInputs(); // 먼저 현재 입력 값 저장
+    if (!editData.portfolios) {
+        editData.portfolios = [];
+    }
+    editData.portfolios.push({
+        title: '',
+        description: '',
+        image: '',
+        link: '',
+        enabled: true
+    });
+    renderPortfolioEdit();
+}
+
+function renderPortfolioEdit(skipSave) {
+    if (!skipSave) {
+        savePortfolioInputs(); // 렌더링 전에 현재 입력 값 저장
+    }
+    if (!editData.portfolios) {
+        editData.portfolios = [];
+    }
+    const container = document.getElementById('portfolioEditContainer');
+    container.innerHTML = '';
+    
+    editData.portfolios.forEach((portfolio, index) => {
+        const portfolioDiv = createPortfolioEditItem(portfolio, index);
+        container.appendChild(portfolioDiv);
+    });
+}
+
+function createPortfolioEditItem(portfolio, index) {
+    const div = document.createElement('div');
+    div.className = 'edit-item';
+    div.setAttribute('data-index', index);
+    div.innerHTML = `
+        <div class="edit-item-header">
+            <span class="edit-item-title">${portfolio.title || '새 포트폴리오'}</span>
+            <div style="display: flex; gap: 5px;">
+                <button type="button" class="move-btn" onclick="movePortfolio(${index}, 'up')" title="위로" ${index === 0 ? 'disabled' : ''}><i class="fas fa-arrow-up"></i></button>
+                <button type="button" class="move-btn" onclick="movePortfolio(${index}, 'down')" title="아래로" ${index === (editData.portfolios.length - 1) ? 'disabled' : ''}><i class="fas fa-arrow-down"></i></button>
+                <button type="button" class="delete-btn" onclick="deletePortfolio(${index})">삭제</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>
+                <input type="checkbox" class="item-enabled" ${portfolio.enabled !== false ? 'checked' : ''} data-index="${index}" data-type="portfolio">
+                활성화
+            </label>
+        </div>
+        <div class="form-group">
+            <label>제목:</label>
+            <input type="text" class="portfolio-title" value="${portfolio.title || ''}" data-index="${index}" placeholder="예: 쇼핑몰 웹사이트">
+        </div>
+        <div class="form-group">
+            <label>설명:</label>
+            <textarea class="portfolio-description" data-index="${index}" rows="6" placeholder="포트폴리오 설명을 입력하세요">${portfolio.description || ''}</textarea>
+        </div>
+        <div class="form-group">
+            <label>이미지 URL:</label>
+            <input type="text" class="portfolio-image" value="${portfolio.image || ''}" data-index="${index}" placeholder="https://example.com/image.jpg">
+        </div>
+        <div class="form-group">
+            <label>링크 URL:</label>
+            <input type="url" class="portfolio-link" value="${portfolio.link || ''}" data-index="${index}" placeholder="https://example.com">
+        </div>
+    `;
+    return div;
+}
+
+function savePortfolioInputs() {
+    if (!editData.portfolios) return;
+    document.querySelectorAll('.portfolio-title').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.portfolios[index]) {
+            editData.portfolios[index].title = input.value;
+        }
+    });
+    document.querySelectorAll('.portfolio-description').forEach(textarea => {
+        const index = parseInt(textarea.dataset.index);
+        if (editData.portfolios[index]) {
+            editData.portfolios[index].description = textarea.value;
+        }
+    });
+    document.querySelectorAll('.portfolio-image').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.portfolios[index]) {
+            editData.portfolios[index].image = input.value;
+        }
+    });
+    document.querySelectorAll('.portfolio-link').forEach(input => {
+        const index = parseInt(input.dataset.index);
+        if (editData.portfolios[index]) {
+            editData.portfolios[index].link = input.value;
+        }
+    });
+    document.querySelectorAll('.item-enabled[data-type="portfolio"]').forEach(checkbox => {
+        const index = parseInt(checkbox.dataset.index);
+        if (editData.portfolios[index]) {
+            editData.portfolios[index].enabled = checkbox.checked;
+        }
+    });
+}
+
+function movePortfolio(index, direction) {
+    if (!editData.portfolios) return;
+    savePortfolioInputs();
+    if (direction === 'up' && index > 0) {
+        const temp = editData.portfolios[index - 1];
+        editData.portfolios[index - 1] = editData.portfolios[index];
+        editData.portfolios[index] = temp;
+        renderPortfolioEdit(true); // skipSave=true로 전달하여 중복 저장 방지
+    } else if (direction === 'down' && index < editData.portfolios.length - 1) {
+        const temp = editData.portfolios[index];
+        editData.portfolios[index] = editData.portfolios[index + 1];
+        editData.portfolios[index + 1] = temp;
+        renderPortfolioEdit(true); // skipSave=true로 전달하여 중복 저장 방지
+    }
+}
+
+function deletePortfolio(index) {
+    if (!editData.portfolios) return;
+    savePortfolioInputs(); // 먼저 현재 입력 값 저장
+    editData.portfolios.splice(index, 1);
+    renderPortfolioEdit(true); // skipSave=true로 전달하여 중복 저장 방지
+}
+
 // 저장 함수
 function saveData() {
+    // 먼저 모든 입력 필드 값 저장 (프로젝트 설명 포함)
+    saveProjectInputs();
+    
     // 프로필 정보
     const profileImageValue = document.getElementById('editProfileImage').value;
     if (profileImageValue) {
@@ -1138,10 +1473,8 @@ function saveData() {
         const index = parseInt(input.dataset.index);
         editData.projects[index].period = input.value;
     });
-    document.querySelectorAll('.project-description').forEach(textarea => {
-        const index = parseInt(textarea.dataset.index);
-        editData.projects[index].description = textarea.value;
-    });
+    // 프로젝트 설명은 saveProjectInputs()에서 이미 저장되므로 여기서는 제거
+    // (중복 저장 방지)
     document.querySelectorAll('.project-skills').forEach(input => {
         const index = parseInt(input.dataset.index);
         const skillsStr = input.value;
@@ -1252,6 +1585,14 @@ function saveData() {
     editData.enabled.education = document.getElementById('editEducationEnabled').checked;
     editData.enabled.etc = document.getElementById('editEtcEnabled').checked;
     editData.enabled.article = document.getElementById('editArticleEnabled').checked;
+    
+    // 자기소개서 저장
+    saveCoverLetterInputs();
+    editData.enabled.coverLetter = document.getElementById('editCoverLetterEnabled').checked;
+    
+    // 포트폴리오 저장
+    savePortfolioInputs();
+    editData.enabled.portfolio = document.getElementById('editPortfolioEnabled').checked;
 
     // 섹션 순서 설정
     editData.sectionOrder = {
@@ -1260,11 +1601,26 @@ function saveData() {
         opensource: parseInt(document.getElementById('sectionOrderOpensource').value) || 3,
         education: parseInt(document.getElementById('sectionOrderEducation').value) || 4,
         etc: parseInt(document.getElementById('sectionOrderEtc').value) || 5,
-        article: parseInt(document.getElementById('sectionOrderArticle').value) || 6
+        article: parseInt(document.getElementById('sectionOrderArticle').value) || 6,
+        coverLetter: parseInt(document.getElementById('sectionOrderCoverLetter').value) || 7,
+        portfolio: parseInt(document.getElementById('sectionOrderPortfolio').value) || 8
     };
 
     // 저장
+    // 저장 전 최종 확인
+    console.log('저장할 데이터:', editData);
+    console.log('프로젝트 설명들:', editData.projects.map((p, i) => ({ index: i, name: p.name, description: p.description })));
+    
     ProfileData.save(editData);
+    
+    // 저장 확인
+    const saved = localStorage.getItem('profileData');
+    if (saved) {
+        const savedData = JSON.parse(saved);
+        console.log('저장된 데이터 확인:', savedData);
+        console.log('저장된 프로젝트 설명들:', savedData.projects.map((p, i) => ({ index: i, name: p.name, description: p.description })));
+    }
+    
     alert('저장되었습니다!');
     window.location.href = 'index.html';
 }
@@ -1297,6 +1653,12 @@ document.getElementById('addEtcBtn').addEventListener('click', addEtc);
 
 // ARTICLE 추가 버튼
 document.getElementById('addArticleBtn').addEventListener('click', addArticle);
+
+// 자기소개서 추가 버튼
+document.getElementById('addCoverLetterBtn').addEventListener('click', addCoverLetter);
+
+// 포트폴리오 추가 버튼
+document.getElementById('addPortfolioBtn').addEventListener('click', addPortfolio);
 
 // SKILL 입력 엔터 키 처리
 document.addEventListener('keypress', function(e) {
@@ -1561,5 +1923,49 @@ function insertSpecialText(type) {
         signature.textContent = 'Lee HwaYoung';
         document.execCommand('insertHTML', false, signature.outerHTML);
     }
+}
+
+// 프로젝트 설명을 편집용으로 포맷팅 (텍스트의 \n을 <br>로 변환)
+function formatProjectDescriptionForEdit(description) {
+    if (!description) return '';
+    // 이미 HTML 태그가 있으면 그대로 반환
+    if (description.includes('<') && description.includes('>')) {
+        return description;
+    }
+    // 텍스트 형식이면 \n을 <br>로 변환하고 HTML 특수문자 이스케이프
+    return description
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>');
+}
+
+// 프로젝트 설명 포맷팅 함수
+function formatProjectText(index, command) {
+    const editor = document.querySelector(`.project-description[data-index="${index}"]`);
+    if (!editor) return;
+    
+    editor.focus();
+    document.execCommand(command, false, null);
+}
+
+// 프로젝트 설명 링크 삽입 함수
+function insertProjectLink(index) {
+    const editor = document.querySelector(`.project-description[data-index="${index}"]`);
+    if (!editor) return;
+    
+    editor.focus();
+    
+    const url = prompt('링크 URL을 입력하세요:');
+    if (!url) return;
+    
+    const text = prompt('링크 텍스트를 입력하세요 (선택사항):') || url;
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.textContent = text;
+    
+    document.execCommand('insertHTML', false, link.outerHTML);
 }
 

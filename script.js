@@ -3,13 +3,54 @@ const ProfileData = {
     load: function() {
         const saved = localStorage.getItem('profileData');
         if (saved) {
-            return JSON.parse(saved);
+            try {
+                const data = JSON.parse(saved);
+                // 데이터 검증만 하고 자동 복구는 하지 않음 (데이터 손실 방지)
+                return data;
+            } catch (e) {
+                console.error('데이터 파싱 오류:', e);
+                return this.getDefaultData();
+            }
         }
         return this.getDefaultData();
     },
 
     save: function(data) {
+        // 이전 데이터를 백업으로 저장 (최대 10개까지)
+        const backupKey = 'profileData_backup';
+        const backups = JSON.parse(localStorage.getItem(backupKey) || '[]');
+        
+        // 현재 데이터를 백업에 추가 (타임스탬프 포함)
+        const backup = {
+            timestamp: new Date().toISOString(),
+            data: JSON.parse(JSON.stringify(data)) // 깊은 복사
+        };
+        backups.push(backup);
+        
+        // 최대 10개까지만 보관 (오래된 것부터 삭제)
+        if (backups.length > 10) {
+            backups.shift();
+        }
+        
+        localStorage.setItem(backupKey, JSON.stringify(backups));
         localStorage.setItem('profileData', JSON.stringify(data));
+    },
+    
+    // 백업 데이터 조회
+    getBackups: function() {
+        const backupKey = 'profileData_backup';
+        return JSON.parse(localStorage.getItem(backupKey) || '[]');
+    },
+    
+    // 특정 시간의 백업 데이터 복원
+    restoreBackup: function(timestamp) {
+        const backups = this.getBackups();
+        const backup = backups.find(b => b.timestamp === timestamp);
+        if (backup) {
+            this.save(backup.data);
+            return backup.data;
+        }
+        return null;
     },
 
     getDefaultData: function() {
@@ -155,25 +196,28 @@ const ProfileData = {
             ],
             projects: [
                 {
-                    name: '영업정보시스템 고도화 프로젝트',
+                    name: '영업정보시스템 고도화',
                     period: '2025. 10 ~ 2025. 12',
-                    description: '* SAP RFC를 JCO(Java Connector)를 활용하여 SAP 시스템과 연동 구현\n* 개인정보 처리 프로세스 고도화 및 보안 강화\n* 프로젝트 산출물 작성 및 문서화',
+                    client: '코웨이',
+                    description: 'SAP RFC를 JCO(Java Connector)를 활용하여 SAP 시스템과 연동 구현\n개인정보 처리 프로세스 고도화 및 보안 강화\n프로젝트 산출물 작성 및 문서화',
                     skills: ['SAP RFC', 'Java', 'HTTP', 'SI개발', 'JCO'],
                     links: [],
                     enabled: true
                 },
                 {
-                    name: '차세대 전력정보시스템 업무개선 개발',
-                    period: '2024. 11 ~ 2025. 06',
-                    description: '* 전자정부 표준프레임워크 기반 백엔드 로직 설계 및 구현\n* 비계량평가시스템 개발 참여 및 데이터 처리 로직 구현\n* MyBatis를 활용한 데이터베이스 연동 및 쿼리 최적화',
+                    name: '차세대 전력정보 시스템 업무개선 개발 - 비계량 평가 시스템',
+                    period: '2025.06~2025.09',
+                    client: '한국전력',
+                    description: '전자정부 표준프레임워크 기반 백엔드 로직 설계 및 구현\n비계량평가시스템 개발 참여 및 데이터 처리 로직 구현\nMyBatis를 활용한 데이터베이스 연동 및 쿼리 최적화',
                     skills: ['전자정부프레임워크', 'Java', 'MariaDB', 'JavaScript', 'MyBatis'],
                     links: [],
                     enabled: true
                 },
                 {
-                    name: '금형분야 카테고리 MES 시스템 개발',
-                    period: '2024. 04 ~ 2024. 09',
-                    description: '* Spring Boot와 React.js를 활용한 풀스택 웹 애플리케이션 개발\n* RESTful API 설계 및 프론트-백엔드 통합 개발\n* Chart.js를 이용한 실시간 데이터 시각화 및 대시보드 구현',
+                    name: '차세대 전력정보시스템 업무개선 개발 - 성과관리 시스템',
+                    period: '2024. 11 ~ 2025. 06',
+                    client: '한국전력',
+                    description: 'Spring Boot와 React.js를 활용한 풀스택 웹 애플리케이션 개발\nRESTful API 설계 및 프론트-백엔드 통합 개발\nChart.js를 이용한 실시간 데이터 시각화 및 대시보드 구현',
                     skills: ['Spring Boot', 'React.js', 'Chart.js', 'JavaScript', 'PostgreSQL', 'Java'],
                     links: [],
                     enabled: true
@@ -181,7 +225,8 @@ const ProfileData = {
                 {
                     name: '보증관련시스템 개발/운영',
                     period: '2023. 10 ~ 2024. 04',
-                    description: '* 경기신용보증재단 시스템 유지보수 및 신규 기능 개발\n* 보증 관련 웹 화면 UI/UX 개선 및 비즈니스 로직 구현\n* TrustForm, Rexpert 전문 솔루션 연동 및 오류 수정',
+                    client: '경기신용보증재단',
+                    description: '',
                     skills: ['Java', 'JSP', 'Oracle', 'JavaScript', 'TrustForm', 'Rexpert'],
                     links: [],
                     enabled: true
@@ -189,7 +234,7 @@ const ProfileData = {
                 {
                     name: '자사몰 모바일 인식 UI 화면 구축',
                     period: '2021. 02 ~ 2023. 08',
-                    description: '* 자사몰 홈페이지 화면단 구현 및 UI 기능 개선\n* Spring Framework 기반 웹 애플리케이션 개발 및 유지보수\n* 반응형 웹 디자인 적용 및 모바일 환경 최적화\n* 크로스 브라우저 호환성 개선 및 성능 최적화',
+                    description: '',
                     skills: ['Spring', 'JavaScript', 'Oracle', 'Java', 'jQuery', 'HTML/CSS'],
                     links: [],
                     enabled: true
@@ -197,7 +242,8 @@ const ProfileData = {
                 {
                     name: '취약계층 생활정보 문자시스템 구현',
                     period: '2020. 07 ~ 2020. 09',
-                    description: '* 기상청 취약계층 생활정보 문자 발송 시스템 유지보수\n* 통계 웹 페이지 UI 구현 및 데이터 시각화\n* PHP-Java 하이브리드 서버 개발 및 MySQL/MSSQL 데이터 수집·가공 기능 구현',
+                    client: '기상청',
+                    description: '',
                     skills: ['Java', 'JSP', 'PHP', 'MySQL', 'MSSQL', 'Spring', 'MyBatis', 'JavaScript'],
                     links: [],
                     enabled: true
@@ -220,6 +266,8 @@ const ProfileData = {
             ],
             etcs: [],
             articles: [],
+            coverLetters: [],
+            portfolios: [],
             enabled: {
                 introduce: true,
                 skill: true,
@@ -228,7 +276,9 @@ const ProfileData = {
                 opensource: true,
                 education: true,
                 etc: true,
-                article: true
+                article: true,
+                coverLetter: true,
+                portfolio: true
             },
             sectionOrder: {
                 experience: 1,
@@ -236,7 +286,9 @@ const ProfileData = {
                 opensource: 3,
                 education: 4,
                 etc: 5,
-                article: 6
+                article: 6,
+                coverLetter: 7,
+                portfolio: 8
             }
         };
     }
@@ -334,7 +386,9 @@ function renderProfile() {
         opensource: 3,
         education: 4,
         etc: 5,
-        article: 6
+        article: 6,
+        coverLetter: 7,
+        portfolio: 8
     };
     
     // 섹션들을 순서대로 정렬
@@ -344,10 +398,12 @@ function renderProfile() {
         { key: 'opensource', id: 'opensourceSection', render: renderOpensource },
         { key: 'education', id: 'educationSection', render: renderEducation },
         { key: 'etc', id: 'etcSection', render: renderEtc },
-        { key: 'article', id: 'articleSection', render: renderArticle }
+        { key: 'article', id: 'articleSection', render: renderArticle },
+        { key: 'coverLetter', id: 'coverLetterSection', render: renderCoverLetter },
+        { key: 'portfolio', id: 'portfolioSection', render: renderPortfolio }
     ];
     
-    // 먼저 모든 섹션 렌더링
+    // 먼저 모든 섹션 렌더링 (초기 상태 설정 및 내용 채우기)
     sections.forEach(section => {
         section.render(data);
     });
@@ -357,194 +413,322 @@ function renderProfile() {
     
     // 컨테이너 참조
     const container = document.querySelector('.container');
-    const skillSection = document.getElementById('skillSection');
+    const skillSection = document.getElementById('skillSection'); // SKILL 섹션 뒤에 삽입 시작
     
     // 순서대로 재배치
     let insertAfter = skillSection;
     sections.forEach(section => {
         const sectionEl = document.getElementById(section.id);
         if (sectionEl && !sectionEl.classList.contains('hidden')) {
+            // 현재 위치가 이미 올바르면 이동하지 않음
             if (insertAfter.nextSibling !== sectionEl) {
                 container.insertBefore(sectionEl, insertAfter.nextSibling);
             }
             insertAfter = sectionEl;
         }
     });
+    
 }
 
 function renderExperience(data) {
-    if (data.enabled.experience) {
-        document.getElementById('experienceSection').classList.remove('hidden');
-        
-        // 총 경력 계산
-        const totalDuration = calculateTotalExperience(data.experiences);
-        const experienceTitle = document.querySelector('#experienceSection h2');
-        if (experienceTitle && totalDuration) {
-            experienceTitle.innerHTML = `EXPERIENCE <span style="font-size: 16px; color: #666; font-weight: normal;">총 ${totalDuration}</span>`;
-        }
-        
-        const expContent = document.getElementById('experienceContent');
-        expContent.innerHTML = '';
-        data.experiences.forEach(exp => {
-            if (exp.enabled) {
-                const expDiv = document.createElement('div');
-                expDiv.className = 'experience-item';
-                const startDate = exp.startDate ? formatDateForDisplay(exp.startDate) : '';
-                const endDate = exp.isCurrent ? '현재' : (exp.endDate ? formatDateForDisplay(exp.endDate) : '');
-                const period = exp.period || (startDate && endDate ? `${startDate} ~ ${endDate}` : '');
-                
-                expDiv.innerHTML = `
-                    <div class="experience-header">
-                        <div class="experience-period">${period}</div>
-                        <div class="experience-company">${exp.company}</div>
-                        <div class="experience-duration">${exp.duration || ''} ${exp.employmentType ? `(${exp.employmentType})` : ''}</div>
-                        <div class="experience-role">${exp.role || ''}</div>
-                    </div>
-                    <div class="experience-description">${formatDescription(exp.description)}</div>
-                    ${exp.skills && exp.skills.length > 0 ? `
-                        <div class="experience-skills">
-                            <strong>Skill Keywords:</strong>
-                            <div class="skill-items">
-                                ${exp.skills.map(s => `<span class="skill-item">${s}</span>`).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                `;
-                expContent.appendChild(expDiv);
+    if (data.enabled.experience && data.experiences && data.experiences.length > 0) {
+        const hasEnabled = data.experiences.some(exp => exp.enabled);
+        if (hasEnabled) {
+            document.getElementById('experienceSection').classList.remove('hidden');
+            
+            // 총 경력 계산
+            const totalDuration = calculateTotalExperience(data.experiences);
+            const experienceTitle = document.querySelector('#experienceSection h2');
+            if (experienceTitle && totalDuration) {
+                experienceTitle.innerHTML = `EXPERIENCE <span style="font-size: 16px; color: #666; font-weight: normal;">총 ${totalDuration}</span>`;
             }
-        });
+            
+            const expContent = document.getElementById('experienceContent');
+            expContent.innerHTML = '';
+            data.experiences.forEach(exp => {
+                if (exp.enabled) {
+                    const expDiv = document.createElement('div');
+                    expDiv.className = 'experience-item';
+                    const startDate = exp.startDate ? formatDateForDisplay(exp.startDate) : '';
+                    const endDate = exp.isCurrent ? '현재' : (exp.endDate ? formatDateForDisplay(exp.endDate) : '');
+                    const period = exp.period || (startDate && endDate ? `${startDate} ~ ${endDate}` : '');
+                    
+                    expDiv.innerHTML = `
+                        <div class="experience-header">
+                            <div class="experience-period">${period}</div>
+                            <div class="experience-company">${exp.company}</div>
+                            <div class="experience-duration">${exp.duration || ''} ${exp.employmentType ? `(${exp.employmentType})` : ''}</div>
+                            <div class="experience-role">${exp.role || ''}</div>
+                        </div>
+                        <div class="experience-description">${formatDescription(exp.description)}</div>
+                        ${exp.skills && exp.skills.length > 0 ? `
+                            <div class="experience-skills">
+                                <strong>Skill Keywords:</strong>
+                                <div class="skill-items">
+                                    ${exp.skills.map(s => `<span class="skill-item">${s}</span>`).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    `;
+                    expContent.appendChild(expDiv);
+                }
+            });
+        } else {
+            document.getElementById('experienceSection').classList.add('hidden');
+        }
     } else {
         document.getElementById('experienceSection').classList.add('hidden');
     }
 }
 
 function renderProject(data) {
-    if (data.enabled.project) {
-        document.getElementById('projectSection').classList.remove('hidden');
-        const projContent = document.getElementById('projectContent');
-        projContent.innerHTML = '';
-        data.projects.forEach(proj => {
-            if (proj.enabled) {
-                const projDiv = document.createElement('div');
-                projDiv.className = 'project-item';
-                projDiv.innerHTML = `
-                    <div class="project-header">
-                        <div class="project-name">${proj.name}</div>
-                        ${proj.client ? `<div class="project-client">고객사: ${proj.client}</div>` : ''}
-                        <div class="project-period">${proj.period || ''}</div>
-                    </div>
-                    <div class="project-description">${formatDescription(proj.description)}</div>
-                    ${proj.skills && proj.skills.length > 0 ? `
-                        <div class="project-skills">
-                            <strong>기술 스택:</strong>
-                            <div class="skill-items">
-                                ${proj.skills.map(s => `<span class="skill-item">${s}</span>`).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
-                    ${proj.links && proj.links.length > 0 ? `
-                        <div class="project-links">
-                            ${proj.links.map(link => `<a href="${link.url}" target="_blank">${link.label || link.url}</a>`).join('')}
-                        </div>
-                    ` : ''}
-                `;
-                projContent.appendChild(projDiv);
-            }
-        });
-    } else {
-        document.getElementById('projectSection').classList.add('hidden');
+    const projectSection = document.getElementById('projectSection');
+    if (!projectSection) {
+        return; // 요소가 없으면 (edit.html 등) 실행하지 않음
     }
+    
+    // 데이터 검증
+    if (!data) {
+        projectSection.classList.add('hidden');
+        return;
+    }
+    
+    // enabled 확인
+    if (!data.enabled || data.enabled.project === false) {
+        projectSection.classList.add('hidden');
+        return;
+    }
+    
+    // projects 배열 확인
+    if (!data.projects || !Array.isArray(data.projects) || data.projects.length === 0) {
+        projectSection.classList.add('hidden');
+        return;
+    }
+    
+    // 활성화된 프로젝트 확인
+    const enabledProjects = data.projects.filter(proj => proj.enabled !== false);
+    if (enabledProjects.length === 0) {
+        projectSection.classList.add('hidden');
+        return;
+    }
+    
+    // 프로젝트 섹션 표시
+    projectSection.classList.remove('hidden');
+    const projContent = document.getElementById('projectContent');
+    if (!projContent) {
+        console.error('renderProject: projectContent 요소를 찾을 수 없습니다.');
+        return;
+    }
+    
+    projContent.innerHTML = '';
+    
+    // 각 프로젝트 렌더링
+    enabledProjects.forEach((proj) => {
+        const projDiv = document.createElement('div');
+        projDiv.className = 'project-item';
+        
+        // description이 없으면 빈 문자열로 처리
+        const description = proj.description || '';
+        
+        projDiv.innerHTML = `
+            <div class="project-header">
+                <div class="project-name">${proj.name || ''}</div>
+                ${proj.client ? `<div class="project-client">고객사: ${proj.client}</div>` : ''}
+                <div class="project-period">${proj.period || ''}</div>
+            </div>
+            <div class="project-description">${formatDescription(description)}</div>
+            ${proj.skills && proj.skills.length > 0 ? `
+                <div class="project-skills">
+                    <strong>기술 스택:</strong>
+                    <div class="skill-items">
+                        ${proj.skills.map(s => `<span class="skill-item">${s}</span>`).join('')}
+                    </div>
+                </div>
+            ` : ''}
+            ${proj.links && proj.links.length > 0 ? `
+                <div class="project-links">
+                    ${proj.links.map(link => `<a href="${link.url}" target="_blank">${link.label || link.url}</a>`).join('')}
+                </div>
+            ` : ''}
+        `;
+        projContent.appendChild(projDiv);
+    });
 }
 
 function renderOpensource(data) {
-    if (data.enabled.opensource) {
-        document.getElementById('opensourceSection').classList.remove('hidden');
-        const osContent = document.getElementById('opensourceContent');
-        osContent.innerHTML = '';
-        data.opensources.forEach(os => {
-            if (os.enabled) {
-                const osDiv = document.createElement('div');
-                osDiv.className = 'opensource-item';
-                osDiv.innerHTML = `
-                    <div class="opensource-name">${os.name}</div>
-                    <div class="opensource-description">${formatDescription(os.description)}</div>
-                    ${os.links && os.links.length > 0 ? `
-                        <div class="opensource-links">
-                            ${os.links.map(link => `<a href="${link.url}" target="_blank">${link.label || link.url}</a>`).join('')}
-                        </div>
-                    ` : ''}
-                `;
-                osContent.appendChild(osDiv);
-            }
-        });
+    if (data.enabled.opensource && data.opensources && data.opensources.length > 0) {
+        const hasEnabled = data.opensources.some(os => os.enabled);
+        if (hasEnabled) {
+            document.getElementById('opensourceSection').classList.remove('hidden');
+            const osContent = document.getElementById('opensourceContent');
+            osContent.innerHTML = '';
+            data.opensources.forEach(os => {
+                if (os.enabled) {
+                    const osDiv = document.createElement('div');
+                    osDiv.className = 'opensource-item';
+                    osDiv.innerHTML = `
+                        <div class="opensource-name">${os.name}</div>
+                        <div class="opensource-description">${formatDescription(os.description)}</div>
+                        ${os.links && os.links.length > 0 ? `
+                            <div class="opensource-links">
+                                ${os.links.map(link => `<a href="${link.url}" target="_blank">${link.label || link.url}</a>`).join('')}
+                            </div>
+                        ` : ''}
+                    `;
+                    osContent.appendChild(osDiv);
+                }
+            });
+        } else {
+            document.getElementById('opensourceSection').classList.add('hidden');
+        }
     } else {
         document.getElementById('opensourceSection').classList.add('hidden');
     }
 }
 
 function renderEducation(data) {
-    if (data.enabled.education) {
-        document.getElementById('educationSection').classList.remove('hidden');
-        const eduContent = document.getElementById('educationContent');
-        eduContent.innerHTML = '';
-        data.educations.forEach(edu => {
-            if (edu.enabled) {
-                const eduDiv = document.createElement('div');
-                eduDiv.className = 'education-item';
-                eduDiv.innerHTML = `
-                    <div class="education-period">${edu.period}</div>
-                    <div class="education-school">${edu.school}</div>
-                    <div class="education-major">${edu.major || ''}</div>
-                `;
-                eduContent.appendChild(eduDiv);
-            }
-        });
+    if (data.enabled.education && data.educations && data.educations.length > 0) {
+        const hasEnabled = data.educations.some(edu => edu.enabled);
+        if (hasEnabled) {
+            document.getElementById('educationSection').classList.remove('hidden');
+            const eduContent = document.getElementById('educationContent');
+            eduContent.innerHTML = '';
+            data.educations.forEach(edu => {
+                if (edu.enabled) {
+                    const eduDiv = document.createElement('div');
+                    eduDiv.className = 'education-item';
+                    eduDiv.innerHTML = `
+                        <div class="education-period">${edu.period}</div>
+                        <div class="education-school">${edu.school}</div>
+                        <div class="education-major">${edu.major || ''}</div>
+                    `;
+                    eduContent.appendChild(eduDiv);
+                }
+            });
+        } else {
+            document.getElementById('educationSection').classList.add('hidden');
+        }
     } else {
         document.getElementById('educationSection').classList.add('hidden');
     }
 }
 
 function renderEtc(data) {
-    if (data.enabled.etc) {
-        document.getElementById('etcSection').classList.remove('hidden');
-        const etcContent = document.getElementById('etcContent');
-        etcContent.innerHTML = '';
-        data.etcs.forEach(etc => {
-            if (etc.enabled) {
-                const etcDiv = document.createElement('div');
-                etcDiv.className = 'etc-item';
-                etcDiv.innerHTML = `
-                    <div class="etc-period">${etc.period}</div>
-                    <div class="etc-title">${etc.title}</div>
-                    ${etc.role ? `<div class="etc-role">${etc.role}</div>` : ''}
-                    ${etc.description ? `<div class="etc-description">${formatDescription(etc.description)}</div>` : ''}
-                `;
-                etcContent.appendChild(etcDiv);
-            }
-        });
+    if (data.enabled.etc && data.etcs && data.etcs.length > 0) {
+        const hasEnabled = data.etcs.some(etc => etc.enabled);
+        if (hasEnabled) {
+            document.getElementById('etcSection').classList.remove('hidden');
+            const etcContent = document.getElementById('etcContent');
+            etcContent.innerHTML = '';
+            data.etcs.forEach(etc => {
+                if (etc.enabled) {
+                    const etcDiv = document.createElement('div');
+                    etcDiv.className = 'etc-item';
+                    etcDiv.innerHTML = `
+                        <div class="etc-period">${etc.period}</div>
+                        <div class="etc-title">${etc.title}</div>
+                        ${etc.role ? `<div class="etc-role">${etc.role}</div>` : ''}
+                        ${etc.description ? `<div class="etc-description">${formatDescription(etc.description)}</div>` : ''}
+                    `;
+                    etcContent.appendChild(etcDiv);
+                }
+            });
+        } else {
+            document.getElementById('etcSection').classList.add('hidden');
+        }
     } else {
         document.getElementById('etcSection').classList.add('hidden');
     }
 }
 
 function renderArticle(data) {
-    if (data.enabled.article) {
-        document.getElementById('articleSection').classList.remove('hidden');
-        const articleContent = document.getElementById('articleContent');
-        articleContent.innerHTML = '';
-        const ul = document.createElement('ul');
-        ul.className = 'article-list';
-        data.articles.forEach(article => {
-            if (article.enabled) {
-                const li = document.createElement('li');
-                li.className = 'article-item';
-                li.innerHTML = `<a href="${article.url || '#'}" target="_blank">${article.title}</a>`;
-                ul.appendChild(li);
-            }
-        });
-        articleContent.appendChild(ul);
+    if (data.enabled.article && data.articles && data.articles.length > 0) {
+        const hasEnabled = data.articles.some(article => article.enabled);
+        if (hasEnabled) {
+            document.getElementById('articleSection').classList.remove('hidden');
+            const articleContent = document.getElementById('articleContent');
+            articleContent.innerHTML = '';
+            const ul = document.createElement('ul');
+            ul.className = 'article-list';
+            data.articles.forEach(article => {
+                if (article.enabled) {
+                    const li = document.createElement('li');
+                    li.className = 'article-item';
+                    li.innerHTML = `<a href="${article.url || '#'}" target="_blank">${article.title}</a>`;
+                    ul.appendChild(li);
+                }
+            });
+            articleContent.appendChild(ul);
+        } else {
+            document.getElementById('articleSection').classList.add('hidden');
+        }
     } else {
         document.getElementById('articleSection').classList.add('hidden');
+    }
+}
+
+function renderCoverLetter(data) {
+    const coverLetterSection = document.getElementById('coverLetterSection');
+    if (!coverLetterSection) return;
+    
+    if (data.enabled.coverLetter && data.coverLetters && data.coverLetters.length > 0) {
+        const hasEnabled = data.coverLetters.some(letter => letter.enabled);
+        if (hasEnabled) {
+            coverLetterSection.classList.remove('hidden');
+            const coverLetterContent = document.getElementById('coverLetterContent');
+            coverLetterContent.innerHTML = '';
+            data.coverLetters.forEach(letter => {
+                if (letter.enabled) {
+                    const letterDiv = document.createElement('div');
+                    letterDiv.className = 'cover-letter-item';
+                    letterDiv.innerHTML = `
+                        <div class="cover-letter-header">
+                            <h3>${letter.title || '자기소개서'}</h3>
+                            ${letter.company ? `<div class="cover-letter-subtitle">${letter.company}</div>` : ''}
+                        </div>
+                        <div class="cover-letter-content">${formatDescription(letter.content)}</div>
+                    `;
+                    coverLetterContent.appendChild(letterDiv);
+                }
+            });
+        } else {
+            coverLetterSection.classList.add('hidden');
+        }
+    } else {
+        coverLetterSection.classList.add('hidden');
+    }
+}
+
+function renderPortfolio(data) {
+    const portfolioSection = document.getElementById('portfolioSection');
+    if (!portfolioSection) return;
+    
+    if (data.enabled.portfolio && data.portfolios && data.portfolios.length > 0) {
+        const hasEnabled = data.portfolios.some(portfolio => portfolio.enabled);
+        if (hasEnabled) {
+            portfolioSection.classList.remove('hidden');
+            const portfolioContent = document.getElementById('portfolioContent');
+            portfolioContent.innerHTML = '';
+            data.portfolios.forEach(portfolio => {
+                if (portfolio.enabled) {
+                    const portfolioDiv = document.createElement('div');
+                    portfolioDiv.className = 'portfolio-item';
+                    portfolioDiv.innerHTML = `
+                        <div class="portfolio-header">
+                            <h3>${portfolio.title || '포트폴리오'}</h3>
+                            ${portfolio.link ? `<a href="${portfolio.link}" target="_blank" class="portfolio-link-btn">보러가기 <i class="fas fa-external-link-alt"></i></a>` : ''}
+                        </div>
+                        ${portfolio.image ? `<div class="portfolio-image-container"><img src="${portfolio.image}" alt="${portfolio.title}" class="portfolio-image"></div>` : ''}
+                        <div class="portfolio-description">${formatDescription(portfolio.description)}</div>
+                    `;
+                    portfolioContent.appendChild(portfolioDiv);
+                }
+            });
+        } else {
+            portfolioSection.classList.add('hidden');
+        }
+    } else {
+        portfolioSection.classList.add('hidden');
     }
 }
 
@@ -651,9 +835,11 @@ function formatDescription(text) {
                 result += '</ul>';
                 inList = false;
             }
-            if (line) {
+            if (line.trim()) {
+                // 빈 줄이 아닌 경우
                 result += `<p>${escapeHtml(line)}</p>`;
             } else {
+                // 빈 줄인 경우
                 result += '<br>';
             }
         }
@@ -668,11 +854,106 @@ function formatDescription(text) {
 
 // 기본 데이터로 리셋
 function resetToDefault() {
-    const message = '저장된 모든 데이터가 삭제되고 기본 데이터로 초기화됩니다.\n\n개인정보(이름, 이메일, 전화번호 등)도 모두 초기값으로 되돌아갑니다.\n\n정말로 계속하시겠습니까?';
+    const message = '저장된 모든 데이터가 삭제되고 기본 데이터로 초기화됩니다.\n\n개인정보(이름, 이메일, 전화번호 등)도 모두 초기값으로 되돌아갑니다.\n\n⚠️ 주의: 이 작업은 되돌릴 수 없습니다!\n\n정말로 계속하시겠습니까?';
     if (confirm(message)) {
-        localStorage.removeItem('profileData');
-        alert('기본 데이터로 리셋되었습니다.');
-        location.reload();
+        try {
+            // localStorage 완전 삭제
+            localStorage.removeItem('profileData');
+            
+            // 기본 데이터 가져오기
+            const defaultData = ProfileData.getDefaultData();
+            
+            // 기본 데이터 검증
+            if (!defaultData.projects || !Array.isArray(defaultData.projects) || defaultData.projects.length === 0) {
+                alert('오류: 기본 데이터가 유효하지 않습니다.');
+                console.error('기본 프로젝트 데이터가 없습니다.');
+                return;
+            }
+            
+            // 각 프로젝트의 description 확인
+            const invalidProjects = defaultData.projects.filter(proj => !proj.description || typeof proj.description !== 'string');
+            if (invalidProjects.length > 0) {
+                alert('오류: 기본 데이터의 프로젝트 설명이 유효하지 않습니다.');
+                console.error('유효하지 않은 프로젝트:', invalidProjects);
+                return;
+            }
+            
+            // 기본 데이터를 localStorage에 저장
+            ProfileData.save(defaultData);
+            
+            // 저장 확인
+            const saved = localStorage.getItem('profileData');
+            if (!saved) {
+                alert('오류: 데이터 저장에 실패했습니다.');
+                console.error('데이터 저장 실패');
+                return;
+            }
+            
+            alert('기본 데이터로 리셋되었습니다. 페이지를 새로고침합니다.');
+            // 강제 새로고침 (캐시 무시)
+            location.reload(true);
+        } catch (e) {
+            alert('오류가 발생했습니다: ' + e.message);
+            console.error('리셋 오류:', e);
+        }
+    }
+}
+
+// 백업 이력 보기
+function showBackupHistory() {
+    const backups = ProfileData.getBackups();
+    
+    if (backups.length === 0) {
+        alert('저장된 백업이 없습니다.\n\n앞으로는 저장할 때마다 자동으로 백업이 생성됩니다.');
+        return;
+    }
+    
+    // 백업 목록을 시간순으로 정렬 (최신순)
+    const sortedBackups = [...backups].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    // 백업 목록 표시
+    let message = '백업 이력 (최신순):\n\n';
+    sortedBackups.forEach((backup, index) => {
+        const date = new Date(backup.timestamp);
+        const timeStr = date.toLocaleString('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        message += `${index + 1}. ${timeStr}\n`;
+    });
+    
+    message += '\n복원할 백업 번호를 입력하세요 (취소: 0):';
+    const choice = prompt(message);
+    
+    if (choice && choice !== '0' && choice !== '') {
+        const index = parseInt(choice) - 1;
+        if (index >= 0 && index < sortedBackups.length) {
+            const selectedBackup = sortedBackups[index];
+            const date = new Date(selectedBackup.timestamp);
+            const timeStr = date.toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            if (confirm(`이 백업으로 복원하시겠습니까?\n\n시간: ${timeStr}\n\n현재 데이터는 백업으로 저장됩니다.`)) {
+                // 현재 데이터를 먼저 백업
+                const currentData = ProfileData.load();
+                ProfileData.save(currentData);
+                // 선택한 백업으로 복원
+                ProfileData.restoreBackup(selectedBackup.timestamp);
+                alert('백업이 복원되었습니다. 페이지를 새로고침합니다.');
+                location.reload();
+            }
+        } else {
+            alert('잘못된 번호입니다.');
+        }
     }
 }
 
