@@ -961,7 +961,18 @@ function backupData() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `profile-backup-${new Date().toISOString().split('T')[0]}.json`;
+        
+        // 로컬 시간 기준으로 YYYYMMDDHHmmss 형식 생성
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const timestamp = `${year}${month}${day}${hours}${minutes}${seconds}`;
+        
+        a.download = `profile-backup-${timestamp}.json`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
