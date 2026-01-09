@@ -18,10 +18,12 @@ desktop.ini
 *.temp
 
 # 개인 편집용 파일 (배포에 불필요)
-# edit.html
-# edit.js
-# edit-styles.css
-# index.html
-# view.html
-# extract-profile-data.html
+edit.html
+edit.js
+edit-styles.css
+index.html
+view.html
+extract-profile-data.html
+index-deploy.html
+DEPLOY.md
 
