@@ -40,6 +40,7 @@
         "Spring Boot",
         "Spring Framework",
         "React.js",
+        "Vue.js",
         "React Native",
         "Node.js",
         "jQuery",
@@ -92,6 +93,29 @@
     }
   ],
   "experiences": [
+    {
+      "startDate": "2026-01-01",
+      "endDate": "2026-03-31",
+      "isCurrent": false,
+      "employmentType": "프리랜서",
+      "period": "2026. 01 ~ 2026. 03",
+      "company": "효성ITX",
+      "duration": "3개월",
+      "role": "IT서비스데스크 프로",
+      "description": "* 통합 IT 서비스데스크 유지보수\n* 데이터 관리 제반 업무",
+      "skills": [
+        "HTTP",
+        "SM운영",
+        "서버관리",
+        "JAVA",
+        "VUE",
+        "ORACLE",
+        "Javascript",
+        "JSP",
+        "ibatis"
+      ],
+      "enabled": true
+    },
     {
       "startDate": "2025-10-01",
       "endDate": "2025-12-31",
@@ -241,6 +265,15 @@
   ],
   "projects": [
     {
+      "name": "통합 IT 서비스데스크 유지보수 및 데이터 관리",
+      "period": "2026. 01 ~ 2026. 03",
+      "links": [],
+      "enabled": true,
+      "skills": [],
+      "client": "삼성전자",
+      "description": "SCMS(Samsung Contents Management System) 컨텐츠 제작관리<br>CS Portal(Customer Service Portal)<br>SKP 데이터 관리 및 수정"
+    },
+    {
       "name": "영업정보시스템 고도화",
       "period": "2025. 10 ~ 2025. 12",
       "links": [],
@@ -316,7 +349,7 @@
   "opensources": [],
   "educations": [
     {
-      "period": "2024. 11 ~ 2026. 02",
+      "period": "2024. 11 ~ 2026. 03",
       "school": "학점은행제",
       "major": "컴퓨터공학과 재학중",
       "enabled": true
