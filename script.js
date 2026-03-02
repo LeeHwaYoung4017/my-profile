@@ -268,6 +268,10 @@ const ProfileData = {
             articles: [],
             coverLetters: [],
             portfolios: [],
+            personal: {
+                myApp: { items: [] },
+                bot: { items: [] }
+            },
             enabled: {
                 introduce: true,
                 skill: true,
@@ -278,7 +282,8 @@ const ProfileData = {
                 etc: true,
                 article: true,
                 coverLetter: true,
-                portfolio: true
+                portfolio: true,
+                personal: true
             },
             sectionOrder: {
                 experience: 1,
@@ -288,7 +293,8 @@ const ProfileData = {
                 etc: 5,
                 article: 6,
                 coverLetter: 7,
-                portfolio: 8
+                portfolio: 8,
+                personal: 9
             }
         };
     }
@@ -388,9 +394,10 @@ function renderProfile() {
         etc: 5,
         article: 6,
         coverLetter: 7,
-        portfolio: 8
+        portfolio: 8,
+        personal: 9
     };
-    
+
     // 섹션들을 순서대로 정렬
     const sections = [
         { key: 'experience', id: 'experienceSection', render: renderExperience },
@@ -400,7 +407,8 @@ function renderProfile() {
         { key: 'etc', id: 'etcSection', render: renderEtc },
         { key: 'article', id: 'articleSection', render: renderArticle },
         { key: 'coverLetter', id: 'coverLetterSection', render: renderCoverLetter },
-        { key: 'portfolio', id: 'portfolioSection', render: renderPortfolio }
+        { key: 'portfolio', id: 'portfolioSection', render: renderPortfolio },
+        { key: 'personal', id: 'personalSection', render: renderPersonal }
     ];
     
     // 먼저 모든 섹션 렌더링 (초기 상태 설정 및 내용 채우기)
@@ -702,7 +710,7 @@ function renderCoverLetter(data) {
 function renderPortfolio(data) {
     const portfolioSection = document.getElementById('portfolioSection');
     if (!portfolioSection) return;
-    
+
     if (data.enabled.portfolio && data.portfolios && data.portfolios.length > 0) {
         const hasEnabled = data.portfolios.some(portfolio => portfolio.enabled);
         if (hasEnabled) {
@@ -729,6 +737,78 @@ function renderPortfolio(data) {
         }
     } else {
         portfolioSection.classList.add('hidden');
+    }
+}
+
+function renderPersonal(data) {
+    const personalSection = document.getElementById('personalSection');
+    if (!personalSection) return;
+
+    const personal = data.personal;
+    const enabled = data.enabled && data.enabled.personal !== false;
+    const hasMyApp = enabled && personal && personal.myApp && personal.myApp.items && personal.myApp.items.length > 0;
+    const hasBot = enabled && personal && personal.bot && personal.bot.items && personal.bot.items.length > 0;
+
+    if (!hasMyApp && !hasBot) {
+        personalSection.classList.add('hidden');
+        return;
+    }
+
+    personalSection.classList.remove('hidden');
+
+    const myAppContent = document.getElementById('personalMyAppContent');
+    const botContent = document.getElementById('personalBotContent');
+    if (!myAppContent || !botContent) return;
+
+    if (hasMyApp) {
+        myAppContent.closest('.personal-subsection').classList.remove('hidden');
+        myAppContent.innerHTML = '';
+        personal.myApp.items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'personal-app-item';
+            const title = item.title || '';
+            const desc = item.description ? formatDescription(item.description) : '';
+            div.innerHTML = `
+                <div class="personal-item-inner">
+                    <img src="${item.image}" alt="${title}" class="personal-app-img" loading="lazy">
+                    ${title ? `<div class="personal-item-title">${title}</div>` : ''}
+                    ${desc ? `<div class="personal-item-desc">${desc}</div>` : ''}
+                </div>
+            `;
+            myAppContent.appendChild(div);
+        });
+    } else {
+        myAppContent.closest('.personal-subsection').classList.add('hidden');
+    }
+
+    if (hasBot) {
+        botContent.closest('.personal-subsection').classList.remove('hidden');
+        botContent.innerHTML = '';
+        personal.bot.items.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'personal-bot-item';
+            const program = item.program || '';
+            const botName = item.botName || '';
+            const botLabel = [program, botName].filter(Boolean).join(', ');
+            const desc = item.description ? formatDescription(item.description) : '';
+            const url = item.url || '';
+            const hasTooltip = desc || url;
+            div.innerHTML = `
+                <div class="personal-item-inner ${hasTooltip ? 'personal-bot-has-tooltip' : ''}">
+                    <img src="${item.image}" alt="${botLabel}" class="personal-bot-img" loading="lazy">
+                    ${botLabel ? `<div class="personal-bot-label">${botLabel}</div>` : ''}
+                    ${hasTooltip ? `
+                    <div class="personal-bot-tooltip">
+                        ${desc ? `<div class="personal-bot-tooltip-desc">${desc}</div>` : ''}
+                        ${url ? `<a href="${url}" target="_blank" rel="noopener noreferrer" class="personal-bot-tooltip-link">사이트 방문 <i class="fas fa-external-link-alt"></i></a>` : ''}
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+            botContent.appendChild(div);
+        });
+    } else {
+        botContent.closest('.personal-subsection').classList.add('hidden');
     }
 }
 

@@ -373,7 +373,8 @@
     "etc": false,
     "article": false,
     "coverLetter": false,
-    "portfolio": false
+    "portfolio": false,
+    "personal": true
   },
   "sectionOrder": {
     "experience": 1,
@@ -383,7 +384,8 @@
     "etc": 5,
     "article": 6,
     "coverLetter": 7,
-    "portfolio": 8
+    "portfolio": 8,
+    "personal": 9
   },
   "coverLetters": [
     {
@@ -399,5 +401,26 @@
       "enabled": true
     }
   ],
-  "portfolios": []
+  "portfolios": [],
+  "personal": {
+    "myApp": {
+      "items": [
+        { "image": "img(app)/calculator.png", "title": "심플계산기", "description": "" },
+        { "image": "img(app)/EasySmartPDFReader.jpg", "title": "EasySmart PDF Reader", "description": "" },
+        { "image": "img(app)/lotto.png", "title": "로또", "description": "" },
+        { "image": "img(app)/qrcodescanner.png", "title": "QR코드 스캐너", "description": "" }
+      ]
+    },
+    "bot": {
+      "items": [
+        {
+          "image": "img(bot)/image.png",
+          "program": "Discord",
+          "botName": "이뜨 봇",
+          "description": "디스코드 서버관리 및 게임 봇, 2026.03.02 기준 15,480명 사용 중",
+          "url": "https://etteudiscordbot.duckdns.org/"
+        }
+      ]
+    }
+  }
 }
